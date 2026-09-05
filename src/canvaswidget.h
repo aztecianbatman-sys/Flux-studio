@@ -1,16 +1,23 @@
 #pragma once
 #include <QColor>
 #include <QImage>
-#include <QPoint>
+#include <QPointF>
 #include <QVector>
-#include <QWidget>
+#include <QOpenGLWidget>
 
 class QMouseEvent;
 class QWheelEvent;
+class QTabletEvent;
+class QResizeEvent;
 class QPainter;
 class FluxDocument;
+class FluxCanvasEngine;
+class FluxSelectionEngine;
+class FluxTransform;
+class BrushEngine;
+struct BrushInput;
 
-class FluxCanvas final : public QWidget {
+class FluxCanvas final : public QOpenGLWidget {
     Q_OBJECT
 public:
     explicit FluxCanvas(QWidget* parent=nullptr);
@@ -25,9 +32,17 @@ public:
     void fitCanvas();
     void toggleOnionSkin(bool enabled) { m_onionSkin=enabled; update(); }
     bool onionSkin() const { return m_onionSkin; }
-    double zoom() const { return m_zoom; }
+    void setMirrorHorizontal(bool enabled);
+    void setMirrorVertical(bool enabled);
+    void setCanvasRotation(qreal degrees);
+    void setPixelPerfect(bool enabled);
+    void setStabilization(qreal amount);
+    double zoom() const;
     void undo();
     void redo();
+    void clearSelection();
+    void selectAll();
+    void applySelectionTransform();
 
 signals:
     void wheelRequested(const QPoint& globalPos);
@@ -35,6 +50,8 @@ signals:
     void documentChanged();
     void cursorInfoChanged(const QString& text);
     void strokeStarted();
+    void selectionChanged();
+    void zoomChanged(double zoom);
 
 protected:
     void paintEvent(QPaintEvent*) override;
@@ -42,24 +59,43 @@ protected:
     void mouseMoveEvent(QMouseEvent*) override;
     void mouseReleaseEvent(QMouseEvent*) override;
     void wheelEvent(QWheelEvent*) override;
+    void tabletEvent(QTabletEvent*) override;
+    void resizeEvent(QResizeEvent*) override;
 
 private:
-    QPointF widgetToImage(const QPointF& p) const;
-    QRectF canvasRect() const;
-    void drawStroke(const QPointF& a, const QPointF& b);
-    void drawToolPreview(QPainter& p);
+    QPointF widgetToCanvas(const QPointF& p) const;
+    QPointF canvasToWidget(const QPointF& p) const;
     void pushUndoState();
     void drawOnion(QPainter& p, const QRectF& target, int frame, qreal opacity);
+    void drawSelectionOverlay(QPainter& p);
+    void drawGuides(QPainter& p);
+    void handlePointer(const QPointF& position, qreal pressure, qreal tiltX, qreal tiltY, qreal rotation);
+    void beginSelection(const QPointF& point);
+    void updateSelection(const QPointF& point);
+    void finishSelection();
 
     FluxDocument* m_document{};
+    FluxCanvasEngine* m_engine{};
+    FluxSelectionEngine* m_selection{};
+    FluxTransform* m_transform{};
+    BrushEngine* m_brush{};
     QPointF m_lastPoint;
     QPointF m_cursor;
+    QVector<QPointF> m_lasso;
     bool m_drawing=false;
+    bool m_selecting=false;
     bool m_onionSkin=true;
+    bool m_grid=true;
+    bool m_rulers=true;
+    bool m_transforming=false;
     int m_brushSize=24;
+    qreal m_stabilization=0.12;
     QColor m_brushColor=Qt::black;
     QString m_tool=QStringLiteral("Brush");
-    double m_zoom=1.0;
+    qreal m_pressure=1.0;
+    qreal m_tiltX=0.0;
+    qreal m_tiltY=0.0;
+    qreal m_rotationInput=0.0;
     QVector<QImage> m_undo;
     QVector<QImage> m_redo;
 };

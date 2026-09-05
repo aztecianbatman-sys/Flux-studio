@@ -1,8 +1,8 @@
 #pragma once
 #include <QColor>
+#include <QImage>
 #include <QPoint>
 #include <QVector>
-#include <QImage>
 #include <QWidget>
 
 class QMouseEvent;
@@ -23,6 +23,8 @@ public:
     void setTool(const QString& tool);
     QString tool() const { return m_tool; }
     void fitCanvas();
+    void toggleOnionSkin(bool enabled) { m_onionSkin=enabled; update(); }
+    bool onionSkin() const { return m_onionSkin; }
     double zoom() const { return m_zoom; }
     void undo();
     void redo();
@@ -47,11 +49,13 @@ private:
     void drawStroke(const QPointF& a, const QPointF& b);
     void drawToolPreview(QPainter& p);
     void pushUndoState();
+    void drawOnion(QPainter& p, const QRectF& target, int frame, qreal opacity);
 
     FluxDocument* m_document{};
     QPointF m_lastPoint;
     QPointF m_cursor;
     bool m_drawing=false;
+    bool m_onionSkin=true;
     int m_brushSize=24;
     QColor m_brushColor=Qt::black;
     QString m_tool=QStringLiteral("Brush");

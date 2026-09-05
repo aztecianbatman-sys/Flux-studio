@@ -1,21 +1,40 @@
 #pragma once
 #include <QMainWindow>
+#include <QString>
 
 class QLabel;
 class QListWidget;
 class QSlider;
+class QSpinBox;
 class QTreeWidget;
-class QToolButton;
+class QTimer;
+class QAction;
 class FluxCanvas;
 class FluxWheel;
+class FluxDocument;
 
 class FluxMainWindow final : public QMainWindow {
     Q_OBJECT
 public:
     explicit FluxMainWindow(QWidget* parent = nullptr);
+    ~FluxMainWindow() override;
 
 private slots:
+    void newProject();
+    void openProject();
+    void saveProject();
+    void saveProjectAs();
+    void exportImage();
+    void addLayer();
+    void duplicateLayer();
+    void removeLayer();
+    void layerSelectionChanged();
+    void setFrameFromTimeline(int row);
+    void togglePlayback();
+    void autosave();
     void updateBrushSize(int value);
+    void chooseColor();
+    void setToolFromAction();
     void setStatus(const QString& text);
 
 private:
@@ -25,11 +44,23 @@ private:
     QWidget* makeLayersPanel();
     QWidget* makeInspectorPanel();
     QWidget* makeTimelinePanel();
+    void refreshLayers();
+    void refreshTimeline();
+    void restoreLastSession();
+    void markModified();
     void polish();
 
+    FluxDocument* m_document{};
     FluxCanvas* m_canvas{};
     QLabel* m_statusLabel{};
     QLabel* m_brushSizeLabel{};
+    QLabel* m_cursorLabel{};
     QSlider* m_brushSlider{};
     QTreeWidget* m_layers{};
+    QListWidget* m_frames{};
+    QSpinBox* m_fps{};
+    QTimer* m_playTimer{};
+    bool m_playing=false;
+    QString m_filePath;
+    QString m_autosavePath;
 };

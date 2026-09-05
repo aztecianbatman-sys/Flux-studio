@@ -1,0 +1,9 @@
+build/
+CMakeCache.txt
+CMakeFiles/
+*.user
+.vscode/
+.idea/
+.DS_Store
+*.exe
+*.app

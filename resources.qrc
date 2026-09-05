@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/art">
+    <file>assets/zhen.svg</file>
+  </qresource>
+</RCC>

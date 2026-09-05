@@ -1,6 +1,8 @@
 #pragma once
 #include <QColor>
 #include <QPoint>
+#include <QVector>
+#include <QImage>
 #include <QWidget>
 
 class QMouseEvent;
@@ -22,12 +24,15 @@ public:
     QString tool() const { return m_tool; }
     void fitCanvas();
     double zoom() const { return m_zoom; }
+    void undo();
+    void redo();
 
 signals:
     void wheelRequested(const QPoint& globalPos);
     void brushSizeChanged(int px);
     void documentChanged();
     void cursorInfoChanged(const QString& text);
+    void strokeStarted();
 
 protected:
     void paintEvent(QPaintEvent*) override;
@@ -41,6 +46,7 @@ private:
     QRectF canvasRect() const;
     void drawStroke(const QPointF& a, const QPointF& b);
     void drawToolPreview(QPainter& p);
+    void pushUndoState();
 
     FluxDocument* m_document{};
     QPointF m_lastPoint;
@@ -50,4 +56,6 @@ private:
     QColor m_brushColor=Qt::black;
     QString m_tool=QStringLiteral("Brush");
     double m_zoom=1.0;
+    QVector<QImage> m_undo;
+    QVector<QImage> m_redo;
 };

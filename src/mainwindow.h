@@ -2,7 +2,7 @@
 #include <QMainWindow>
 #include <QString>
 
-class QLabel; class QListWidget; class QSlider; class QSpinBox; class QTreeWidget; class QTimer; class QAction;
+class QLabel; class QListWidget; class QSlider; class QSpinBox; class QTreeWidget; class QTimer;
 class FluxCanvas; class FluxDocument;
 
 class FluxMainWindow final : public QMainWindow {
@@ -19,5 +19,6 @@ private:
     void buildMenus(); void buildToolbar(); void buildDocks(); QWidget* makeLayersPanel(); QWidget* makeInspectorPanel(); QWidget* makeTimelinePanel();
     void refreshLayers(); void refreshTimeline(); void restoreLastSession(); void markModified(); void polish();
     FluxDocument* m_document{}; FluxCanvas* m_canvas{}; QLabel* m_statusLabel{}; QLabel* m_brushSizeLabel{}; QLabel* m_cursorLabel{}; QLabel* m_colorSwatch{};
-    QSlider* m_brushSlider{}; QTreeWidget* m_layers{}; QListWidget* m_frames{}; QSpinBox* m_fps{}; QTimer* m_playTimer{}; bool m_playing=false; QString m_filePath; QString m_autosavePath;
+    QSlider* m_brushSlider{}; QTreeWidget* m_layers{}; QListWidget* m_frames{}; QSpinBox* m_fps{}; QTimer* m_playTimer{}; bool m_playing=false;
+    bool m_mirrorH=false; bool m_mirrorV=false; qreal m_canvasRotation=0; QString m_filePath; QString m_autosavePath;
 };

@@ -15,7 +15,6 @@ class FluxCanvasEngine;
 class FluxSelectionEngine;
 class FluxTransform;
 class BrushEngine;
-struct BrushInput;
 
 class FluxCanvas final : public QOpenGLWidget {
     Q_OBJECT
@@ -81,6 +80,8 @@ private:
     BrushEngine* m_brush{};
     QPointF m_lastPoint;
     QPointF m_cursor;
+    QPointF m_selectionStart;
+    QPointF m_transformStart;
     QVector<QPointF> m_lasso;
     bool m_drawing=false;
     bool m_selecting=false;

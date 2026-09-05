@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(FluxStudio VERSION 0.3.0 LANGUAGES CXX)
+project(FluxStudio VERSION 0.4.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,6 +23,8 @@ qt_add_executable(FluxStudio
     src/fluxdocument.h
     src/fluxbrush.cpp
     src/fluxbrush.h
+    src/brusheditor.cpp
+    src/brusheditor.h
     src/fluxselection.cpp
     src/fluxselection.h
     src/fluxwheel.cpp

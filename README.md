@@ -6,83 +6,99 @@ Flux Studio is a native **C++ / Qt 6** professional 2D drawing, animation, and c
 
 The architecture is deliberately shared-core so future products can become **Flux Draw**, **Flux Animate**, and the bundled **Flux Studio** without rewriting the engine.
 
-## Current build
+## Current milestone — Core engine
 
-The `main` branch contains a working desktop editor foundation with:
+The current `main` branch includes the first advanced core layer:
 
-- Modern dark professional UI optimized for large screens
-- Zhen startup artwork and branded loading screen
-- Real raster canvas backed by `QImage`
-- Brush, pencil, ink and eraser drawing
-- Adjustable brush size and foreground color
-- Canvas zoom and fit-to-window
-- Right-click Flux Wheel
-- Undo / redo for strokes
+- GPU-backed desktop canvas via `QOpenGLWidget`
+- Tile-based canvas cache and compositing engine
+- Canvas zoom, fit, rotation and mirrored views
+- Large-document rendering model
+- Grid, rulers and perspective-guide overlays
+- Reference-image loading
+- Horizontal/vertical symmetry drawing
+- Pixel-perfect rendering mode
+- Pressure-aware brush engine
+- Tablet pressure, tilt and rotation input
+- Pressure-driven size and opacity dynamics
+- Spacing, jitter and scatter
+- Wetness controls and texture-brush support
+- Custom brush preset model
+- Flux brush import/export (`.fluxbrush` / JSON)
+- Interactive Flux Brush Editor
+- Stabilization controls
+- Rectangle and lasso selection
+- Contiguous/color selection engine
+- Add/subtract/intersect selection operations
+- Selection masks
+- Transform matrix with move/scale/rotate/shear support
+- Transform handles overlay
+- Real raster canvas integration
+- Undo/redo for edits
 - Real layer model with visibility, opacity, locking and duplication
-- Multi-frame layer storage
-- Onion-skin preview
-- Animation frame strip and frame selection
-- Frame duplication and playback
-- FPS control
-- Native `.flux` project metadata + frame-image persistence
-- Save / Save As / Open
-- Automatic periodic autosave
+- Multi-frame layer storage and onion skin
+- Animation frame timeline and playback
+- Native `.flux` project persistence
+- Autosave/recovery file path
 - PNG / JPEG / WebP image export
 - Dockable Layers, Inspector and Timeline panels
-- Workspace state persistence
-- Cross-platform CMake project structure
+- Zhen startup artwork and loading screen
 
-## Product scope
+## Drawing engine
 
-### Drawing
+The brush subsystem is independent of the Qt window so it can later be reused by **Flux Draw**, **Flux Animate**, and **Flux Studio**.
 
-Pencil, pen, ink, marker, brush, airbrush, eraser, smudge, blur, fill, gradient, picker, shapes, Bezier, selection, transform, crop, stabilization, pressure/tilt abstraction, brush dynamics, custom brushes, brush presets and palettes.
+Supported brush controls include:
 
-### Layers
+- Size
+- Opacity
+- Flow
+- Spacing
+- Jitter
+- Scatter
+- Wetness
+- Texture strength
+- Stabilization
+- Pressure-to-size
+- Pressure-to-opacity
+- Tilt-to-size
+- Velocity-to-opacity
+- Texture image input
 
-Groups, nested groups, clipping, masks, adjustment layers, blend modes, alpha lock, locking, opacity, thumbnails, reordering, multi-selection and duplication.
+## Canvas engine
 
-### Color
+Flux uses a native OpenGL-backed widget with a reusable tiled rendering layer. The canvas coordinate system supports zoom, pan, rotation, mirroring and document-centered transforms while keeping drawing coordinates separate from screen coordinates.
 
-RGB / HSV / HSL / HEX, color wheel, value selection, gradients, palettes, recent colors, foreground/background colors and color history.
+The editor also exposes grid/rulers/perspective guides, symmetry and reference-image workflows.
 
-### Flux Wheel
+## Selection and transforms
 
-Right-click or press-and-hold interaction with configurable commands, favorite brushes and color access. The wheel is intended to become context-sensitive for drawing, object editing and animation workflows.
+The selection engine supports rectangular, lasso and contiguous selection with replace/add/subtract/intersect modes. The transform subsystem provides a reusable `QTransform`-based foundation for move, scale, rotate and shear operations with visual transform handles.
 
-### Animation
+## Product architecture
 
-Frame-by-frame drawing, holds, exposure-sheet workflow, onion skin, keyframes, dope-sheet timeline, graph editor, camera animation, audio tracks and scene management.
-
-### Compositing
-
-Blend modes, masks, transforms, effects, color correction, glow, shadows and animated effects, with a future node-compositor layer planned on top of the shared core.
-
-### Projects and recovery
-
-Portable `.flux` projects, thumbnails/assets, project metadata, autosave, recovery snapshots, history and future crash-recovery UI.
-
-### Performance architecture
-
-The long-term engine targets GPU canvas rendering, tile-based rendering, cached thumbnails/frames, background export, background autosave, multithreading, large-canvas optimization and adaptive quality.
-
-### Cross-platform roadmap
-
-Desktop first:
-
-- Windows
-- macOS
-- Linux
-
-Shared core is intended to support future tablet/mobile/web front ends without replacing the document and rendering model.
+```text
+                         FLUX CORE
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+          Drawing         Animation      Projects
+           Engine          Engine         / Assets
+              │              │              │
+              └──────────────┼──────────────┘
+                             │
+             ┌───────────────┼───────────────┐
+             ▼               ▼               ▼
+         Flux Draw      Flux Animate      Flux Studio
+```
 
 ## Build
 
-Requires Qt 6.5+ with Widgets and SVG and CMake 3.21+.
+Requires Qt 6.5+ with Widgets, OpenGLWidgets and SVG, plus CMake 3.21+.
 
 ```bash
 cmake -S . -B build
 cmake --build build --config Release
 ```
 
-The current build is an engine-backed desktop prototype, not yet a finished commercial-grade replacement for established suites. Advanced video/audio I/O, GPU acceleration, vector editing, node compositing, full tablet APIs and production export pipelines are the next engineering layer.
+This is still an actively developed engineering build. Production-grade video/audio pipelines, advanced project recovery UX, full Wacom/Windows Ink platform integration, vector editing, node compositing, GPU brush kernels, advanced project version migration and production animation export remain later layers.

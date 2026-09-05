@@ -24,8 +24,6 @@ qt_add_executable(FluxStudio
 
 target_link_libraries(FluxStudio PRIVATE Qt6::Widgets Qt6::Svg)
 
-target_compile_definitions(FluxStudio PRIVATE QT_NO_KEYWORDS)
-
 if(MSVC)
     target_compile_options(FluxStudio PRIVATE /W4 /permissive-)
 else()

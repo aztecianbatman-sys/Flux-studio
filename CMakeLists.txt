@@ -43,6 +43,8 @@ qt_add_executable(FluxStudio
     src/fluxmedia.h
     src/fluxexport.cpp
     src/fluxexport.h
+    src/fluxrenderqueue.cpp
+    src/fluxrenderqueue.h
     resources.qrc
 )
 

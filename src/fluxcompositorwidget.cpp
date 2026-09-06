@@ -11,6 +11,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <QFormLayout>
 #include <QPainter>
 #include <QSet>
 

@@ -11,6 +11,7 @@ class QSlider;
 class FluxDocument;
 class FluxCanvas;
 class FluxRenderQueueWidget;
+class FluxStudioUtilities;
 
 class FluxProductionDock final : public QWidget {
     Q_OBJECT
@@ -32,6 +33,7 @@ private:
     QWidget* buildPerformanceTab();
     QWidget* buildInputTab();
     QWidget* buildWorkspaceTab();
+    QWidget* buildToolsTab();
     void refreshMedia();
     void refreshPerformance();
     FluxDocument* m_document{};
@@ -48,4 +50,5 @@ private:
     QSlider* m_wheelRadius{};
     QTabWidget* m_tabs{};
     FluxRenderQueueWidget* m_renderQueue{};
+    FluxStudioUtilities* m_tools{};
 };

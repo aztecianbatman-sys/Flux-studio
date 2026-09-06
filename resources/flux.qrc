@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="art/zhe.svg">../assets/zhe.svg</file>
+  </qresource>
+</RCC>

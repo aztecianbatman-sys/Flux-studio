@@ -70,6 +70,8 @@ qt_add_executable(FluxStudio
     src/fluxcolormanagement.h
     src/fluxvector.cpp
     src/fluxvector.h
+    src/fluxstudioutilities.cpp
+    src/fluxstudioutilities.h
     resources/flux.qrc
 )
 

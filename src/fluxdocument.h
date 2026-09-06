@@ -26,6 +26,7 @@ struct FluxLayer {
     QString name;
     FluxLayerType type = FluxLayerType::Paint;
     int parentIndex = -1;
+    int maskTarget = -1;
     bool expanded = true;
     bool visible = true;
     bool locked = false;
@@ -64,6 +65,7 @@ public:
     void addLayer(const QString& name = QStringLiteral("Paint Layer"), FluxLayerType type = FluxLayerType::Paint, int parentIndex = -1);
     void addGroup(const QString& name = QStringLiteral("Group"), int parentIndex = -1);
     void addMask(int layerIndex, bool vectorMask = false);
+    void addAdjustment(const QString& name = QStringLiteral("Adjustment"), int parentIndex = -1);
     void removeLayer(int index);
     void duplicateLayer(int index);
     void mergeDown(int index);

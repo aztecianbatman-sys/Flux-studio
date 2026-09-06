@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QIcon>
 #include "mainwindow.h"
 
 int main(int argc, char *argv[]) {
@@ -6,6 +7,7 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setApplicationName("Flux Studio");
     QCoreApplication::setApplicationVersion("0.9.0");
     QCoreApplication::setOrganizationName("Flux");
+    app.setWindowIcon(QIcon(QStringLiteral(":/branding/flux-logo.svg")));
 
     FluxMainWindow window;
     window.show();

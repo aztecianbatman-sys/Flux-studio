@@ -5,7 +5,7 @@ RequestExecutionLevel admin
 
 !define APP_NAME "Flux Studio"
 !define APP_EXE "Flux Studio.exe"
-!define APP_VERSION "0.6.0"
+!define APP_VERSION "0.8.0"
 !define PUBLISHER "Flux"
 !define INSTALL_DIR "$PROGRAMFILES64\Flux Studio"
 !define PROJECT_ROOT "..\.."
@@ -45,7 +45,6 @@ Section "Flux Studio" SEC_MAIN
   File /r "${PROJECT_ROOT}\dist\*"
 
   WriteUninstaller "$INSTDIR\Uninstall Flux Studio.exe"
-
   CreateDirectory "$SMPROGRAMS\Flux Studio"
   CreateShortcut "$SMPROGRAMS\Flux Studio\Flux Studio.lnk" "$INSTDIR\${APP_EXE}"
   CreateShortcut "$SMPROGRAMS\Flux Studio\Uninstall Flux Studio.lnk" "$INSTDIR\Uninstall Flux Studio.exe"

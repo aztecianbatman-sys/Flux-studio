@@ -16,26 +16,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
-      - name: Install Qt 6.8.3
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: 6.8.3
-          host: windows
-          target: desktop
-          arch: win64_msvc2022_64
-          modules: ''
-          cache: true
-          cache-key-prefix: flux-studio-qt-windows-x64
-          add-tools-to-path: true
+      - name: Install Qt with aqtinstall
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip aqtinstall
+          python -m aqt install-qt windows desktop 6.8.3 win64_msvc2022_64 -m qtsvg --outputdir "$env:RUNNER_TEMP\Qt"
 
       - name: Configure
         shell: pwsh
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="$env:RUNNER_TEMP\Qt\6.8.3\msvc2022_64"
 
       - name: Build
         shell: pwsh
@@ -52,11 +41,11 @@ jobs:
           }
           Copy-Item $exe 'dist\Flux Studio.exe'
 
-          $windeploy = Get-Command windeployqt.exe -ErrorAction SilentlyContinue
-          if (!$windeploy) {
-            throw 'windeployqt.exe could not be located on PATH.'
+          $windeploy = Join-Path $env:RUNNER_TEMP 'Qt\6.8.3\msvc2022_64\bin\windeployqt.exe'
+          if (!(Test-Path $windeploy)) {
+            throw "windeployqt.exe was not found: $windeploy"
           }
-          & $windeploy.Source --release --compiler-runtime --no-translations 'dist\Flux Studio.exe'
+          & $windeploy --release --compiler-runtime --no-translations 'dist\Flux Studio.exe'
           if ($LASTEXITCODE -ne 0) {
             throw "windeployqt failed with exit code $LASTEXITCODE"
           }

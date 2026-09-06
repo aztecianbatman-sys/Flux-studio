@@ -1,0 +1,14 @@
+#include "fluxstudio_nextwindow.h"
+#include "fluxdocument.h"
+#include <QDockWidget>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QListWidget>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QToolButton>
+#include <QSpinBox>
+#include <QListView>
+void FluxNextWindow::buildLayerDock(){auto*d=new QDockWidget("Layers",this);d->setObjectName("FluxLayersDock");auto*w=new QWidget(d);auto*r=new QVBoxLayout(w);r->addWidget(new QLabel("DOCUMENT HIERARCHY",w));m_layers=new QListWidget(w);r->addWidget(m_layers,1);auto*h=new QHBoxLayout;auto*a=new QPushButton("+",w);auto*g=new QPushButton("Group",w);auto*x=new QPushButton("Duplicate",w);auto*z=new QPushButton("-",w);h->addWidget(a);h->addWidget(g);h->addWidget(x);h->addWidget(z);r->addLayout(h);connect(m_layers,&QListWidget::itemClicked,this,&FluxNextWindow::selectLayer);connect(a,&QPushButton::clicked,this,&FluxNextWindow::addLayer);connect(g,&QPushButton::clicked,this,&FluxNextWindow::addGroup);connect(x,&QPushButton::clicked,this,&FluxNextWindow::duplicateLayer);connect(z,&QPushButton::clicked,this,&FluxNextWindow::deleteLayer);d->setWidget(w);addDockWidget(Qt::RightDockWidgetArea,d);d->hide();}
+void FluxNextWindow::buildTimelineDock(){auto*d=new QDockWidget("Animation",this);d->setObjectName("FluxTimelineDock");auto*w=new QWidget(d);auto*r=new QVBoxLayout(w);auto*h=new QHBoxLayout;auto*p=new QPushButton("Previous",w);auto*pl=new QPushButton("Play",w);auto*n=new QPushButton("Next",w);auto*f=new QSpinBox(w);f->setRange(1,240);f->setValue(24);f->setSuffix(" fps");h->addWidget(p);h->addWidget(pl);h->addWidget(n);h->addStretch();h->addWidget(f);r->addLayout(h);m_frames=new QListWidget(w);m_frames->setFlow(QListView::LeftToRight);m_frames->setWrapping(false);m_frames->setFixedHeight(70);r->addWidget(m_frames);connect(p,&QPushButton::clicked,this,&FluxNextWindow::previousFrame);connect(pl,&QPushButton::clicked,this,&FluxNextWindow::togglePlayback);connect(n,&QPushButton::clicked,this,&FluxNextWindow::nextFrame);connect(f,qOverload<int>(&QSpinBox::valueChanged),this,[this](int v){m_playTimer->setInterval(qMax(1,1000/v));});connect(m_frames,&QListWidget::currentRowChanged,this,&FluxNextWindow::setFrame);d->setWidget(w);addDockWidget(Qt::BottomDockWidgetArea,d);d->hide();}
+void FluxNextWindow::buildInspectorDock(){auto*d=new QDockWidget("Inspector",this);d->setObjectName("FluxInspectorDock");auto*w=new QWidget(d);auto*r=new QVBoxLayout(w);r->addWidget(new QLabel("VIEW ASSISTS",w));auto add=[&](const QString&s,auto f){auto*b=new QToolButton(w);b->setText(s);b->setCheckable(true);connect(b,&QToolButton::toggled,this,f);r->addWidget(b);};add("Grid",&FluxNextWindow::toggleGrid);add("Rulers",&FluxNextWindow::toggleRulers);add("Onion Skin",&FluxNextWindow::toggleOnion);add("Symmetry H",&FluxNextWindow::toggleSymmetryH);add("Symmetry V",&FluxNextWindow::toggleSymmetryV);r->addStretch();d->setWidget(w);addDockWidget(Qt::RightDockWidgetArea,d);d->hide();}

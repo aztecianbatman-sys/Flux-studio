@@ -13,7 +13,6 @@ void FluxMainWindow::polish(){
 
 void FluxMainWindow::showRecoveryBrowser(){
     if(!m_production)return;
-    m_stack->setCurrentWidget(m_canvas);
     m_production->show();
     m_production->raise();
 }

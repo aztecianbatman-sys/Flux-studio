@@ -1,5 +1,6 @@
 #pragma once
 #include <QColor>
+#include <QPainterPath>
 #include <QPointF>
 #include <QPolygonF>
 #include <QTransform>

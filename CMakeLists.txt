@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(FluxStudio VERSION 0.6.0 LANGUAGES CXX)
+project(FluxStudio VERSION 0.7.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,8 +13,6 @@ qt_add_executable(FluxStudio
     src/main.cpp
     src/mainwindow.cpp
     src/mainwindow.h
-    src/splashscreen.cpp
-    src/splashscreen.h
     src/canvaswidget.cpp
     src/canvaswidget.h
     src/fluxcanvasengine.cpp
@@ -57,7 +55,6 @@ qt_add_executable(FluxStudio
     src/fluxperformance.h
     src/fluxworkflow.cpp
     src/fluxworkflow.h
-    resources.qrc
 )
 
 target_link_libraries(FluxStudio PRIVATE Qt6::Widgets Qt6::OpenGLWidgets Qt6::Svg)

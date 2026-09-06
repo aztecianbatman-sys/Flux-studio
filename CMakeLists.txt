@@ -37,6 +37,8 @@ qt_add_executable(FluxStudio
     src/fluxtimelinewidget.h
     src/fluxcompositor.cpp
     src/fluxcompositor.h
+    src/fluxcompositorwidget.cpp
+    src/fluxcompositorwidget.h
     src/fluxmedia.cpp
     src/fluxmedia.h
     src/fluxexport.cpp

@@ -9,7 +9,7 @@ jobs:
   package-windows:
     name: Build Windows x64 installer
     runs-on: windows-2022
-    timeout-minutes: 40
+    timeout-minutes: 45
 
     steps:
       - name: Checkout source
@@ -34,7 +34,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $qt = Join-Path $env:RUNNER_TEMP 'Qt\6.8.3\msvc2022_64'
           if (-not (Test-Path $qt)) { throw "Qt not found: $qt" }
-          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="$qt" -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="$qt"
 
       - name: Build Release
         shell: pwsh
@@ -76,27 +76,27 @@ jobs:
           if (-not (Test-Path $nsis)) { throw "NSIS not found: $nsis" }
           & $nsis /V2 'packaging\windows\installer.nsi'
           if ($LASTEXITCODE -ne 0) { throw "NSIS failed with exit code $LASTEXITCODE" }
-          $installer = 'Flux-Studio-0.6.0-Windows-x64-Setup.exe'
+          $installer = 'Flux-Studio-0.8.0-Windows-x64-Setup.exe'
           if (-not (Test-Path $installer)) { throw "Installer missing: $installer" }
 
       - name: Create portable ZIP
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          Compress-Archive -Path 'dist\*' -DestinationPath 'Flux-Studio-0.6.0-Windows-x64-Portable.zip' -Force
+          Compress-Archive -Path 'dist\*' -DestinationPath 'Flux-Studio-0.8.0-Windows-x64-Portable.zip' -Force
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: Flux-Studio-0.6.0-Windows-x64-Installer
-          path: Flux-Studio-0.6.0-Windows-x64-Setup.exe
+          name: Flux-Studio-0.8.0-Windows-x64-Installer
+          path: Flux-Studio-0.8.0-Windows-x64-Setup.exe
           if-no-files-found: error
           retention-days: 14
 
       - name: Upload portable build
         uses: actions/upload-artifact@v4
         with:
-          name: Flux-Studio-0.6.0-Windows-x64-Portable
-          path: Flux-Studio-0.6.0-Windows-x64-Portable.zip
+          name: Flux-Studio-0.8.0-Windows-x64-Portable
+          path: Flux-Studio-0.8.0-Windows-x64-Portable.zip
           if-no-files-found: error
           retention-days: 14

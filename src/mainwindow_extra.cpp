@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "canvaswidget.h"
 #include "fluxproductiondock.h"
 #include <QAction>
 #include <QComboBox>
@@ -18,17 +19,9 @@ void FluxMainWindow::polish(){
     for(auto*label:m_home->findChildren<QLabel*>())if(label->property("role").toString()==QStringLiteral("brandSub"))label->setText(QStringLiteral("STUDIO / 0.9"));
     if(!m_home->findChild<QLabel*>(QStringLiteral("zheHomeArt"))){auto*root=qobject_cast<QVBoxLayout*>(m_home->layout());if(root){auto*art=new QLabel(m_home);art->setObjectName(QStringLiteral("zheHomeArt"));art->setAlignment(Qt::AlignCenter);art->setMinimumHeight(180);art->setMaximumHeight(300);const QPixmap source(QStringLiteral(":/art/zhe.svg"));art->setPixmap(source.scaled(620,300,Qt::KeepAspectRatio,Qt::SmoothTransformation));root->insertWidget(1,art,0,Qt::AlignHCenter);}}
     if(m_topBar){for(auto*combo:m_topBar->findChildren<QComboBox*>()){if(combo->findText("Line")<0){combo->addItems({"Line","Rectangle","Ellipse","Polygon","Star","Bezier","Gradient","Text"});break;}}}
-    if(m_toolRail && !m_toolRail->findChild<QAction*>(QStringLiteral("FluxExtraTools"))){auto*marker=new QAction(this);marker->setObjectName(QStringLiteral("FluxExtraTools"));m_toolRail->insertSeparator(m_toolRail->actions().isEmpty()?nullptr:m_toolRail->actions().last());for(const auto&pair:QList<QPair<QString,QString>>{{"Line","N"},{"Rectangle","R"},{"Ellipse","E"},{"Polygon","G"},{"Star","*"},{"Bezier","V"},{"Gradient","D"},{"Text","T"},{"Fill","F"},{"Color Picker","I"}}){auto*a=m_toolRail->addAction(pair.second);a->setToolTip(pair.first);connect(a,&QAction::triggered,this,[this,pair]{m_canvas->setTool(pair.first);});}}
+    if(m_toolRail && !m_toolRail->findChild<QAction*>(QStringLiteral("FluxExtraTools"))){auto*marker=new QAction(m_toolRail);marker->setObjectName(QStringLiteral("FluxExtraTools"));m_toolRail->addAction(marker);m_toolRail->insertSeparator(marker);for(const auto&pair:QList<QPair<QString,QString>>{{"Line","N"},{"Rectangle","R"},{"Ellipse","E"},{"Polygon","G"},{"Star","*"},{"Bezier","V"},{"Gradient","D"},{"Text","T"},{"Fill","F"},{"Color Picker","I"}}){auto*a=m_toolRail->addAction(pair.second);a->setToolTip(pair.first);connect(a,&QAction::triggered,this,[this,pair]{if(m_canvas)m_canvas->setTool(pair.first);});}}
 }
 
-void FluxMainWindow::showRecoveryBrowser(){
-    if(!m_production)return;
-    m_production->show();
-    m_production->raise();
-}
+void FluxMainWindow::showRecoveryBrowser(){if(!m_production)return;m_production->show();m_production->raise();}
 
-void FluxMainWindow::markModified(){
-    const QString name = m_filePath.isEmpty()?QStringLiteral("Untitled"):QFileInfo(m_filePath).completeBaseName();
-    setWindowTitle(QStringLiteral("Flux Studio — %1 *").arg(name));
-    if(m_statusLabel)m_statusLabel->setText(QStringLiteral("Modified • Unsaved changes"));
-}
+void FluxMainWindow::markModified(){const QString name=m_filePath.isEmpty()?QStringLiteral("Untitled"):QFileInfo(m_filePath).completeBaseName();setWindowTitle(QStringLiteral("Flux Studio — %1 *").arg(name));if(m_statusLabel)m_statusLabel->setText(QStringLiteral("Modified • Unsaved changes"));}

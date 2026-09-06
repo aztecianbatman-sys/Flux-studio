@@ -13,6 +13,7 @@
 #include "fluxproductiondock.h"
 #include "brusheditor.h"
 #include "fluxcolorwheel.h"
+#include "fluxadvancedsuite.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -91,7 +92,7 @@ void FluxMainWindow::buildHome(){
     auto*comp=card("COMPOSITOR","Build effects and finishing chains visually.",m_home);actions->addWidget(comp,1,2);root->addLayout(actions);
     auto*recentBox=new QGroupBox(QStringLiteral("RECENT PROJECTS"),m_home);recentBox->setObjectName("homeRecentBox");auto*recentLayout=new QVBoxLayout(recentBox);recentLayout->setContentsMargins(14,18,14,14);auto*recent=new QListWidget(recentBox);recent->setObjectName("homeRecentList");recent->setMinimumHeight(150);recentLayout->addWidget(recent);root->addWidget(recentBox,1);
     auto populate=[recent](){recent->clear();for(const auto&p:FluxWorkflow::recentProjects(12)){if(!QFileInfo::exists(p))continue;auto*i=new QListWidgetItem(QFileInfo(p).completeBaseName());i->setData(Qt::UserRole,p);i->setToolTip(p);recent->addItem(i);}if(recent->count()==0){auto*i=new QListWidgetItem(QStringLiteral("No recent projects yet — start a new one above."));i->setFlags(Qt::NoItemFlags);recent->addItem(i);}};populate();
-    connect(fresh,&QPushButton::clicked,this,&FluxMainWindow::newProject);connect(open,&QPushButton::clicked,this,&FluxMainWindow::openProject);connect(resume,&QPushButton::clicked,this,&FluxMainWindow::showRecoveryBrowser);connect(recent,&QListWidget::itemDoubleClicked,this,[this](QListWidgetItem*i){if(i)loadProjectPath(i->data(Qt::UserRole).toString());});connect(brush,&QPushButton::clicked,this,&FluxMainWindow::openBrushEditor);connect(comp,&QPushButton::clicked,this,[this]{enterWorkspace();});
+    connect(fresh,&QPushButton::clicked,this,&FluxMainWindow::newProject);connect(open,&QPushButton::clicked,this,&FluxMainWindow::openProject);connect(resume,&QPushButton::clicked,this,&FluxMainWindow::showRecoveryBrowser);connect(recent,&QListWidget::itemDoubleClicked,this,[this](QListWidgetItem*i){if(i)loadProjectPath(i->data(Qt::UserRole).toString());});connect(brush,&QPushButton::clicked,this,[this]{enterWorkspace();openBrushEditor();});connect(comp,&QPushButton::clicked,this,[this]{enterWorkspace();});
     auto*foot=new QHBoxLayout;foot->addWidget(uiLabel("DRAW  →  ANIMATE  →  COMPOSE  →  EXPORT","footer"));foot->addStretch();foot->addWidget(uiLabel("Ctrl+N   Ctrl+O   Ctrl+K   Ctrl+Shift+H","hint"));root->addLayout(foot);
 }
 
@@ -113,7 +114,7 @@ void FluxMainWindow::buildTopBar(){
     m_topBar->addSeparator();auto*undoAct=m_topBar->addAction(style()->standardIcon(QStyle::SP_ArrowBack),"Undo");connect(undoAct,&QAction::triggered,this,&FluxMainWindow::undo);auto*redoAct=m_topBar->addAction(style()->standardIcon(QStyle::SP_ArrowForward),"Redo");connect(redoAct,&QAction::triggered,this,&FluxMainWindow::redo);
     m_topBar->addSeparator();m_topBar->addWidget(uiLabel("TOOL","topLabel"));auto*tool=new QComboBox;tool->addItems({"Brush","Pencil","Ink","Airbrush","Marker","Eraser","Line","Rectangle","Ellipse","Polygon","Star","Bezier","Gradient","Text","Fill","Color Picker","Transform","Pan","Zoom"});tool->setMinimumWidth(130);m_topBar->addWidget(tool);connect(tool,&QComboBox::currentTextChanged,this,[this](const QString&s){m_canvas->setTool(s);});
     m_topBar->addWidget(uiLabel("SIZE","topLabel"));m_brushSlider=new QSlider(Qt::Horizontal);m_brushSlider->setRange(1,1000);m_brushSlider->setValue(24);m_brushSlider->setFixedWidth(110);m_topBar->addWidget(m_brushSlider);connect(m_brushSlider,&QSlider::valueChanged,this,&FluxMainWindow::updateBrushSize);m_brushSizeLabel=uiLabel("24 px","topValue");m_topBar->addWidget(m_brushSizeLabel);
-    m_topBar->addSeparator();m_colorSwatch=uiLabel("●","swatch");m_topBar->addWidget(m_colorSwatch);auto*play=m_topBar->addAction(style()->standardIcon(QStyle::SP_MediaPlay),"Play");connect(play,&QAction::triggered,this,&FluxMainWindow::togglePlayback);auto*fit=m_topBar->addAction("Fit");connect(fit,&QAction::triggered,this,&FluxMainWindow::fitCanvas);m_zoomLabel=uiLabel("100%","topValue");m_topBar->addWidget(m_zoomLabel);m_cursorLabel=uiLabel("0, 0","cursor");m_topBar->addWidget(m_cursorLabel);auto*cmd=m_topBar->addAction("⌘","Command Palette");connect(cmd,&QAction::triggered,this,&FluxMainWindow::showCommandPalette);
+    m_topBar->addSeparator();m_colorSwatch=uiLabel("●","swatch");m_topBar->addWidget(m_colorSwatch);auto*play=m_topBar->addAction(style()->standardIcon(QStyle::SP_MediaPlay),"Play");connect(play,&QAction::triggered,this,&FluxMainWindow::togglePlayback);auto*fit=m_topBar->addAction("Fit");connect(fit,&QAction::triggered,this,&FluxMainWindow::fitCanvas);m_zoomLabel=uiLabel("100%","topValue");m_topBar->addWidget(m_zoomLabel);m_cursorLabel=uiLabel("0, 0","cursor");m_topBar->addWidget(m_cursorLabel);auto*cmd=m_topBar->addAction("⌘");cmd->setToolTip(QStringLiteral("Command Palette (Ctrl+K)"));connect(cmd,&QAction::triggered,this,&FluxMainWindow::showCommandPalette);
 }
 
 void FluxMainWindow::buildToolRail(){

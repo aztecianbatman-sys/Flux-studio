@@ -1,3 +1,4 @@
+#include <QAction>
 #include <QApplication>
 #include <QDockWidget>
 #include <QFileInfo>
@@ -5,6 +6,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QListWidget>
+#include <QMenu>
 #include <QMetaObject>
 #include <QPushButton>
 #include <QSettings>
@@ -186,7 +188,10 @@ int main(int argc, char *argv[]) {
 
     if (auto* canvas = window.findChild<FluxCanvas*>()) {
         auto* page = createStartPage(&window, canvas);
-        page->setGeometry(canvas->rect());
+        auto* overlayLayout = new QVBoxLayout(canvas);
+        overlayLayout->setContentsMargins(0, 0, 0, 0);
+        overlayLayout->setSpacing(0);
+        overlayLayout->addWidget(page);
         page->show();
         page->raise();
         for (auto* dock : window.findChildren<QDockWidget*>()) dock->hide();

@@ -5,16 +5,20 @@
 #include "fluxbrush.h"
 #include <QFileInfo>
 #include <QInputDialog>
+#include <QLineEdit>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPointingDevice>
 #include <QPolygonF>
 #include <QResizeEvent>
+#include <QSet>
 #include <QTabletEvent>
 #include <QWheelEvent>
 #include <algorithm>
 #include <cmath>
+
+namespace { constexpr qreal Pi=3.1415926535897932384626433832795; }
 
 FluxCanvas::FluxCanvas(QWidget* parent):QOpenGLWidget(parent){setFocusPolicy(Qt::StrongFocus);setMouseTracking(true);setAttribute(Qt::WA_OpaquePaintEvent);m_engine=new FluxCanvasEngine;m_selection=new FluxSelectionEngine;m_transform=new FluxTransform;m_brush=new BrushEngine;}
 void FluxCanvas::setDocument(FluxDocument* document){m_document=document;m_engine->setDocument(document);m_undo.clear();m_redo.clear();fitCanvas();update();}
@@ -40,7 +44,7 @@ void FluxCanvas::pushUndoState(){if(!m_document)return;m_undo.push_back(m_docume
 void FluxCanvas::undo(){if(!m_document||m_undo.isEmpty())return;m_redo.push_back(m_document->activeImage().copy());m_document->activeImage()=m_undo.takeLast();m_engine->invalidate();emit documentChanged();update();}
 void FluxCanvas::redo(){if(!m_document||m_redo.isEmpty())return;m_undo.push_back(m_document->activeImage().copy());m_document->activeImage()=m_redo.takeLast();m_engine->invalidate();emit documentChanged();update();}
 bool FluxCanvas::isShapeTool()const{return m_tool=="Line"||m_tool=="Rectangle"||m_tool=="Ellipse"||m_tool=="Polygon"||m_tool=="Star"||m_tool=="Bezier"||m_tool=="Gradient";}
-void FluxCanvas::drawShape(const QPointF&from,const QPointF&to){if(!m_document||m_document->activeLayer().locked)return;QPainter p(&m_document->activeImage());p.setRenderHint(QPainter::Antialiasing,!m_engine->pixelPerfect());QPen pen(m_brushColor,std::max(1,m_brushSize),Qt::SolidLine,Qt::RoundCap,Qt::RoundJoin);p.setPen(pen);p.setBrush(Qt::NoBrush);const QRectF r=QRectF(from,to).normalized();if(m_tool=="Line")p.drawLine(from,to);else if(m_tool=="Rectangle")p.drawRect(r);else if(m_tool=="Ellipse")p.drawEllipse(r);else if(m_tool=="Polygon"||m_tool=="Star"){const QPointF c=r.center();const qreal rx=r.width()/2.,ry=r.height()/2.;const int n=m_tool=="Star"?10:6;QPolygonF poly;for(int i=0;i<n;++i){const qreal a=-M_PI_2+i*(2*M_PI/n);const qreal rr=(m_tool=="Star"&&i%2)?0.48:1.;poly<<QPointF(c.x()+std::cos(a)*rx*rr,c.y()+std::sin(a)*ry*rr);}p.drawPolygon(poly);}else if(m_tool=="Bezier"){QPainterPath path(from);const QPointF d=to-from;const QPointF n(-d.y()*.35,d.x()*.35);path.cubicTo(from+d*.33+n,from+d*.66-n,to);p.drawPath(path);}else if(m_tool=="Gradient"){QLinearGradient g(from,to);g.setColorAt(0,m_brushColor);QColor end=m_brushColor;end.setAlpha(0);g.setColorAt(1,end);p.setPen(Qt::NoPen);p.setBrush(g);p.drawRect(r);}p.end();m_engine->invalidate();emit documentChanged();}
+void FluxCanvas::drawShape(const QPointF&from,const QPointF&to){if(!m_document||m_document->activeLayer().locked)return;QPainter p(&m_document->activeImage());p.setRenderHint(QPainter::Antialiasing,!m_engine->pixelPerfect());QPen pen(m_brushColor,std::max(1,m_brushSize),Qt::SolidLine,Qt::RoundCap,Qt::RoundJoin);p.setPen(pen);p.setBrush(Qt::NoBrush);const QRectF r=QRectF(from,to).normalized();if(m_tool=="Line")p.drawLine(from,to);else if(m_tool=="Rectangle")p.drawRect(r);else if(m_tool=="Ellipse")p.drawEllipse(r);else if(m_tool=="Polygon"||m_tool=="Star"){const QPointF c=r.center();const qreal rx=r.width()/2.,ry=r.height()/2.;const int n=m_tool=="Star"?10:6;QPolygonF poly;for(int i=0;i<n;++i){const qreal a=-Pi/2+i*(2*Pi/n);const qreal rr=(m_tool=="Star"&&i%2)?0.48:1.;poly<<QPointF(c.x()+std::cos(a)*rx*rr,c.y()+std::sin(a)*ry*rr);}p.drawPolygon(poly);}else if(m_tool=="Bezier"){QPainterPath path(from);const QPointF d=to-from;const QPointF n(-d.y()*.35,d.x()*.35);path.cubicTo(from+d*.33+n,from+d*.66-n,to);p.drawPath(path);}else if(m_tool=="Gradient"){QLinearGradient g(from,to);g.setColorAt(0,m_brushColor);QColor end=m_brushColor;end.setAlpha(0);g.setColorAt(1,end);p.setPen(Qt::NoPen);p.setBrush(g);p.drawRect(r);}p.end();m_engine->invalidate();emit documentChanged();}
 void FluxCanvas::bucketFill(const QPointF&point){if(!m_document||m_document->activeLayer().locked)return;QImage&img=m_document->activeImage();const QPoint seed(qRound(point.x()),qRound(point.y()));if(!img.rect().contains(seed))return;const QColor target=img.pixelColor(seed);if(target==m_brushColor)return;pushUndoState();QVector<QPoint> stack{seed};QSet<quint64>seen;const int w=img.width(),h=img.height();auto key=[w](const QPoint&p){return quint64(p.y())*quint64(w)+quint64(p.x());};while(!stack.isEmpty()){const QPoint p=stack.takeLast();const auto k=key(p);if(seen.contains(k))continue;seen.insert(k);if(img.pixelColor(p)!=target)continue;img.setPixelColor(p,m_brushColor);if(p.x()>0)stack.push_back({p.x()-1,p.y()});if(p.x()+1<w)stack.push_back({p.x()+1,p.y()});if(p.y()>0)stack.push_back({p.x(),p.y()-1});if(p.y()+1<h)stack.push_back({p.x(),p.y()+1});}m_engine->invalidate();emit documentChanged();}
 void FluxCanvas::pickColor(const QPointF&point){if(!m_document)return;const QPoint p(qRound(point.x()),qRound(point.y()));if(!m_document->activeImage().rect().contains(p))return;setBrushColor(m_document->activeImage().pixelColor(p));emit cursorInfoChanged(QStringLiteral("Sampled %1").arg(m_brushColor.name(QColor::HexArgb)));}
 void FluxCanvas::insertText(const QPointF&point){if(!m_document||m_document->activeLayer().locked)return;bool ok=false;const QString value=QInputDialog::getText(this,"Flux Text","Text:",QLineEdit::Normal,QString(),&ok);if(!ok||value.isEmpty())return;pushUndoState();QPainter p(&m_document->activeImage());p.setPen(m_brushColor);p.setFont(QFont("Segoe UI",std::max(8,m_brushSize*2),QFont::Normal));p.drawText(point,value);p.end();m_engine->invalidate();emit documentChanged();}

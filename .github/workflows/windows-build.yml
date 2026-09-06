@@ -3,7 +3,7 @@ name: Flux Studio Windows Build
 on: [push, workflow_dispatch]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   package-windows:
@@ -20,26 +20,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Normalize Windows/Qt compatibility
-        shell: pwsh
-        run: python tools/fix_windows_qt68.py
-
-      - name: Persist source compatibility fixes
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src
-          if (git diff --cached --quiet) {
-            Write-Host "No source compatibility changes were necessary."
-          } else {
-            git commit -m "Fix Windows Qt 6.8 MSVC compatibility"
-            git push origin HEAD:main
-          }
-
       - name: Install Qt
         shell: pwsh
         run: |
@@ -54,23 +34,32 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $qt = Join-Path $env:RUNNER_TEMP 'Qt\6.8.3\msvc2022_64'
           if (-not (Test-Path $qt)) { throw "Qt not found: $qt" }
-          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="$qt"
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="$qt" -DCMAKE_BUILD_TYPE=Release
 
       - name: Build Release
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          cmake --build build --config Release --parallel 2
+          cmake --build build --config Release --parallel 2 -- /m:2
 
-      - name: Deploy Qt runtime
+      - name: Verify executable
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           $exe = Join-Path $env:GITHUB_WORKSPACE 'build\Release\Flux Studio.exe'
           if (-not (Test-Path $exe)) { throw "Build output missing: $exe" }
+          Write-Host "Built $exe"
+          Get-Item $exe | Select-Object FullName,Length,LastWriteTime
+
+      - name: Deploy Qt runtime
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item $exe 'dist\Flux Studio.exe'
-          & "$env:RUNNER_TEMP\Qt\6.8.3\msvc2022_64\bin\windeployqt.exe" --release --compiler-runtime --no-translations 'dist\Flux Studio.exe'
+          Copy-Item 'build\Release\Flux Studio.exe' 'dist\Flux Studio.exe'
+          $windeploy = Join-Path $env:RUNNER_TEMP 'Qt\6.8.3\msvc2022_64\bin\windeployqt.exe'
+          if (-not (Test-Path $windeploy)) { throw "windeployqt not found: $windeploy" }
+          & $windeploy --release --compiler-runtime --no-translations 'dist\Flux Studio.exe'
           if ($LASTEXITCODE -ne 0) { throw "windeployqt failed with exit code $LASTEXITCODE" }
 
       - name: Install NSIS

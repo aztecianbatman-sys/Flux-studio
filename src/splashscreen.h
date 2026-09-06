@@ -1,5 +1,6 @@
 #pragma once
 #include <QSplashScreen>
+#include <QString>
 
 class FluxSplash final : public QSplashScreen {
     Q_OBJECT
@@ -9,5 +10,6 @@ public:
 protected:
     void paintEvent(QPaintEvent*) override;
 private:
-    int m_progress=0;
+    int m_progress = 0;
+    QString m_status = QStringLiteral("Waking the canvas…");
 };

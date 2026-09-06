@@ -9,14 +9,14 @@ void FluxCanvasEngine::setZoom(qreal zoom) { m_zoom=qBound(0.05,zoom,32.0); }
 void FluxCanvasEngine::setRotation(qreal degrees) { m_rotation=degrees; }
 void FluxCanvasEngine::setMirror(bool horizontal,bool vertical) { m_mirrorH=horizontal; m_mirrorV=vertical; }
 void FluxCanvasEngine::panBy(const QPointF& delta) { m_pan += delta; }
-void FluxCanvasEngine::resetView(){m_zoom=1.0;m_rotation=0.0;m_pan={0,0};m_mirrorH=false;m_mirrorV=false;}
+void FluxCanvasEngine::resetView(){m_zoom=1.0;m_rotation=0.0;m_pan=QPointF(0.0,0.0);m_mirrorH=false;m_mirrorV=false;}
 
 void FluxCanvasEngine::fitToViewport(const QSize& viewport) {
     if(!m_document || viewport.isEmpty()) return;
     const qreal sx=viewport.width()/qreal(m_document->width());
     const qreal sy=viewport.height()/qreal(m_document->height());
     m_zoom=qMin(sx,sy)*0.9;
-    m_pan={0,0};
+    m_pan=QPointF(0.0,0.0);
 }
 
 QPointF FluxCanvasEngine::widgetToCanvas(const QPointF& point,const QSize& viewport) const {

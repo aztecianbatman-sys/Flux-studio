@@ -114,7 +114,7 @@ void BrushEngine::addPoint(QImage& target, const BrushInput& rawInput) {
         if(m_preset.jitter>0.0){ const qreal r=m_preset.jitter*size; p += QPointF((QRandomGenerator::global()->generateDouble()-0.5)*2*r,(QRandomGenerator::global()->generateDouble()-0.5)*2*r); }
         if(m_preset.scatter>0.0){ const qreal r=m_preset.scatter*size; const qreal a=QRandomGenerator::global()->generateDouble()*6.283185307; p += QPointF(std::cos(a)*r,std::sin(a)*r); }
         qreal opacity=pressureOpacity(input.pressure);
-        if(m_preset.dynamics.velocityOpacity) opacity*=1.0-qBound(0.0,input.velocity/2500.0);
+        if(m_preset.dynamics.velocityOpacity) opacity*=1.0-qBound(0.0,input.velocity/2500.0,1.0);
         qreal adjustedSize=size;
         if(m_preset.dynamics.tiltSize) adjustedSize*=1.0+qMin(1.0,(qAbs(input.tiltX)+qAbs(input.tiltY))/90.0);
         stamp(target,p,adjustedSize,opacity,input.rotation);

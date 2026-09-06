@@ -200,7 +200,7 @@ void FluxNextWindow::buildMenus(){
     auto* image=menuBar()->addMenu(QStringLiteral("Image"));
     image->addAction(QStringLiteral("Crop to Canvas"),this,[this]{m_canvas->fitCanvas();});
     image->addAction(QStringLiteral("Rotate 90°"),this,[this]{m_canvasRotation+=90;if(m_canvasRotation>=360)m_canvasRotation=0;m_canvas->setCanvasRotation(m_canvasRotation);});
-    image->addAction(QStringLiteral("Reset Rotation"),this,[this]{m_canvasRotation=0;m_canvas->setCanvasRotation(0);});
+    image->addAction(QStringLiteral("Reset Rotation"),this,[this]{m_canvasRotation=0;m_canvasRotation=0;m_canvas->setCanvasRotation(0);});
 
     auto* layer=menuBar()->addMenu(QStringLiteral("Layer"));
     layer->addAction(QStringLiteral("Add Paint Layer"),this,&FluxNextWindow::addLayer);

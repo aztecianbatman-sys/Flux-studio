@@ -1,0 +1,63 @@
+#include "fluxstudioutilities.h"
+#include "fluxclipboard.h"
+#include "fluxcolormanagement.h"
+#include "fluxdocument.h"
+#include "fluxpreferences.h"
+#include <QCheckBox>
+#include <QColor>
+#include <QComboBox>
+#include <QCryptographicHash>
+#include <QDir>
+#include <QDirIterator>
+#include <QFile>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QFormLayout>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QListWidget>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QTabWidget>
+#include <QTextEdit>
+#include <QVBoxLayout>
+#include <algorithm>
+
+namespace {
+QPushButton* btn(const QString&s){auto*b=new QPushButton(s);b->setMinimumHeight(32);return b;}
+QLabel* info(const QString&s){auto*l=new QLabel(s);l->setWordWrap(true);return l;}
+}
+
+FluxStudioUtilities::FluxStudioUtilities(FluxDocument*document,QWidget*parent):QWidget(parent),m_document(document){
+    auto*tabs=new QTabWidget(this);tabs->addTab(buildColorLab(),"Color Lab");tabs->addTab(buildAssets(),"Assets");tabs->addTab(buildPreferences(),"Preferences");tabs->addTab(buildDiagnostics(),"Diagnostics");auto*root=new QVBoxLayout(this);root->addWidget(tabs);
+}
+
+QWidget* FluxStudioUtilities::buildColorLab(){
+    auto*w=new QWidget;auto*l=new QVBoxLayout(w);l->addWidget(info("Color-management controls, export validation, palette extraction and clipboard interchange."));
+    auto*g=new QGroupBox("Export Color");auto*f=new QFormLayout(g);m_colorSpace=new QComboBox;m_colorSpace->addItems(FluxColorManagement::colorSpaces());m_range=new QComboBox;m_range->addItems(FluxColorManagement::ranges());m_linear=new QCheckBox("Linear workflow");m_premultiplied=new QCheckBox("Premultiplied alpha");m_premultiplied->setChecked(true);f->addRow("Color space",m_colorSpace);f->addRow("Range",m_range);f->addRow(m_linear);f->addRow(m_premultiplied);l->addWidget(g);
+    auto*row=new QHBoxLayout;auto*validate=btn("Validate current image");auto*copy=btn("Copy image");auto*paste=btn("Paste image");row->addWidget(validate);row->addWidget(copy);row->addWidget(paste);l->addLayout(row);auto*palette=btn("Extract 12-color palette");auto*paletteList=new QListWidget;auto*paletteInfo=info("No palette generated.");l->addWidget(palette);l->addWidget(paletteList,1);l->addWidget(paletteInfo);
+    connect(validate,&QPushButton::clicked,this,[this]{if(!m_document)return;FluxColorConfig c{m_colorSpace->currentText(),m_range->currentText(),m_linear->isChecked(),m_premultiplied->isChecked()};const auto v=FluxColorManagement::validate(c,"png",m_document->composite());QString msg=v.valid?QStringLiteral("Valid export configuration."):v.errors.join('\n');if(!v.warnings.isEmpty())msg+=QStringLiteral("\nWarnings:\n")+v.warnings.join('\n');QMessageBox::information(this,"Color validation",msg);});
+    connect(copy,&QPushButton::clicked,this,[this]{if(m_document)FluxClipboard::setImage(m_document->composite());});
+    connect(paste,&QPushButton::clicked,this,[this]{if(!m_document||!FluxClipboard::hasImage())return;m_document->activeImage()=FluxClipboard::image();});
+    connect(palette,&QPushButton::clicked,this,[this,paletteList,paletteInfo]{extractPalette(paletteList,paletteInfo);});return w;
+}
+
+void FluxStudioUtilities::extractPalette(QListWidget*list,QLabel*infoLabel){list->clear();if(!m_document){infoLabel->setText("No document.");return;}const QImage image=m_document->composite().convertToFormat(QImage::Format_RGB32);if(image.isNull()){infoLabel->setText("No image data.");return;}QHash<QRgb,int> counts;const int step=qMax(1,qMin(image.width(),image.height())/160);for(int y=0;y<image.height();y+=step)for(int x=0;x<image.width();x+=step)counts[image.pixel(x,y)]++;QList<QPair<int,QRgb>> ranked;for(auto it=counts.cbegin();it!=counts.cend();++it)ranked.append({it.value(),it.key()});std::sort(ranked.begin(),ranked.end(),[](const auto&a,const auto&b){return a.first>b.first;});const int n=qMin(12,ranked.size());for(int i=0;i<n;++i){const QColor c=QColor::fromRgb(ranked[i].second);auto*item=new QListWidgetItem(QString("%1  •  %2 samples").arg(c.name(QColor::HexRgb)).arg(ranked[i].first),list);item->setForeground(c);}infoLabel->setText(QString("Palette extracted from %1 sampled pixels.").arg(image.width()*image.height()/qMax(1,step*step)));}
+
+QWidget* FluxStudioUtilities::buildAssets(){
+    auto*w=new QWidget;auto*l=new QVBoxLayout(w);l->addWidget(info("Browse image/media assets, inspect metadata and generate content fingerprints for deduplication."));auto*row=new QHBoxLayout;auto*folder=btn("Choose asset folder…");auto*hash=btn("Hash selected asset");row->addWidget(folder);row->addWidget(hash);l->addLayout(row);auto*list=new QListWidget;l->addWidget(list,1);auto*detail=new QLabel("Select an asset.");detail->setWordWrap(true);l->addWidget(detail);
+    connect(folder,&QPushButton::clicked,this,[this,list,detail]{const auto dir=QFileDialog::getExistingDirectory(this,"Asset Library");if(dir.isEmpty())return;list->clear();QDirIterator it(dir,QStringList()<<"*.png"<<"*.jpg"<<"*.jpeg"<<"*.webp"<<"*.svg"<<"*.gif"<<"*.mp4"<<"*.mov"<<"*.webm",QDir::Files,QDirIterator::Subdirectories);while(it.hasNext()){const auto p=it.next();auto*i=new QListWidgetItem(QFileInfo(p).fileName(),list);i->setData(Qt::UserRole,p);}detail->setText("Indexed files: "+QString::number(list->count()));});
+    connect(list,&QListWidget::currentRowChanged,this,[list,detail](int row){if(row<0)return;const auto p=list->item(row)->data(Qt::UserRole).toString();const auto fi=QFileInfo(p);detail->setText(QString("%1\n%2 bytes\nModified %3").arg(p).arg(fi.size()).arg(fi.lastModified().toString(Qt::ISODate)));});
+    connect(hash,&QPushButton::clicked,this,[list,detail]{const int row=list->currentRow();if(row<0)return;const auto p=list->item(row)->data(Qt::UserRole).toString();QFile f(p);if(!f.open(QIODevice::ReadOnly)){detail->setText("Could not open asset.");return;}const auto digest=QCryptographicHash::hash(f.readAll(),QCryptographicHash::Sha256).toHex();detail->setText(detail->text()+"\nSHA-256: "+QString::fromLatin1(digest));});return w;
+}
+
+QWidget* FluxStudioUtilities::buildPreferences(){
+    auto*w=new QWidget;auto*l=new QVBoxLayout(w);auto*p=FluxPreferencesStore::load();auto*g=new QGroupBox("Application preferences");auto*f=new QFormLayout(g);m_uiScale=new QSpinBox;m_uiScale->setRange(75,200);m_uiScale->setValue(p.uiScale);m_highContrast=new QCheckBox;m_highContrast->setChecked(p.highContrast);m_colorBlind=new QCheckBox;m_colorBlind->setChecked(p.colorBlindAssist);m_checkerboard=new QCheckBox;m_checkerboard->setChecked(p.canvasCheckerboard);m_smoothZoom=new QCheckBox;m_smoothZoom->setChecked(p.smoothZoom);m_gestures=new QCheckBox;m_gestures->setChecked(p.touchpadGestures);m_autosave=new QCheckBox;m_autosave->setChecked(p.autosave);m_autosaveSeconds=new QSpinBox;m_autosaveSeconds->setRange(5,3600);m_autosaveSeconds->setValue(p.autosaveSeconds);m_backupCount=new QSpinBox;m_backupCount->setRange(1,100);m_backupCount->setValue(p.backupCount);m_memoryLimit=new QSpinBox;m_memoryLimit->setRange(256,65536);m_memoryLimit->setValue(p.memoryLimitMiB);f->addRow("UI scale",m_uiScale);f->addRow("High contrast",m_highContrast);f->addRow("Color-assist",m_colorBlind);f->addRow("Canvas checkerboard",m_checkerboard);f->addRow("Smooth zoom",m_smoothZoom);f->addRow("Touchpad gestures",m_gestures);f->addRow("Autosave",m_autosave);f->addRow("Autosave seconds",m_autosaveSeconds);f->addRow("Backup generations",m_backupCount);f->addRow("Memory limit MiB",m_memoryLimit);l->addWidget(g);auto*save=btn("Save preferences");auto*reset=btn("Restore defaults");l->addWidget(save);l->addWidget(reset);l->addStretch();
+    connect(save,&QPushButton::clicked,this,[this]{auto p=FluxPreferencesStore::load();p.uiScale=m_uiScale->value();p.highContrast=m_highContrast->isChecked();p.colorBlindAssist=m_colorBlind->isChecked();p.canvasCheckerboard=m_checkerboard->isChecked();p.smoothZoom=m_smoothZoom->isChecked();p.touchpadGestures=m_gestures->isChecked();p.autosave=m_autosave->isChecked();p.autosaveSeconds=m_autosaveSeconds->value();p.backupCount=m_backupCount->value();p.memoryLimitMiB=m_memoryLimit->value();FluxPreferencesStore::save(p);QMessageBox::information(this,"Preferences","Saved. Restart Flux Studio for UI-scale changes." );});
+    connect(reset,&QPushButton::clicked,this,[this]{FluxPreferencesStore::restoreDefaults();auto p=FluxPreferencesStore::load();m_uiScale->setValue(p.uiScale);m_highContrast->setChecked(p.highContrast);m_colorBlind->setChecked(p.colorBlindAssist);m_checkerboard->setChecked(p.canvasCheckerboard);m_smoothZoom->setChecked(p.smoothZoom);m_gestures->setChecked(p.touchpadGestures);m_autosave->setChecked(p.autosave);m_autosaveSeconds->setValue(p.autosaveSeconds);m_backupCount->setValue(p.backupCount);m_memoryLimit->setValue(p.memoryLimitMiB);});return w;
+}
+
+QWidget* FluxStudioUtilities::buildDiagnostics(){
+    auto*w=new QWidget;auto*l=new QVBoxLayout(w);auto*report=new QTextEdit;report->setReadOnly(true);l->addWidget(report,1);auto*run=btn("Run project health check");l->addWidget(run);connect(run,&QPushButton::clicked,this,[this,report]{if(!m_document){report->setPlainText("No document.");return;}QStringList out;out<<"Flux Studio project diagnostics"<<"Canvas: "+QString::number(m_document->width())+" × "+QString::number(m_document->height());out<<"Frames: "+QString::number(m_document->frameCount());out<<"Layers: "+QString::number(m_document->layers().size());int bad=0;for(const auto&layer:m_document->layers()){if(layer.frames.size()!=m_document->frameCount())++bad;if(layer.image.isNull()&&layer.type==FluxLayerType::Paint)out<<"WARN: empty paint layer • "+layer.name;}out<<"Frame allocation mismatches: "+QString::number(bad);out<<"Composite: "+(m_document->composite().isNull()?QStringLiteral("FAILED"):QStringLiteral("OK"));out<<"Recovery: autosave infrastructure available";report->setPlainText(out.join('\n'));});return w;
+}

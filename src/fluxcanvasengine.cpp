@@ -23,18 +23,18 @@ QPointF FluxCanvasEngine::widgetToCanvas(const QPointF& point,const QSize& viewp
     QPointF p=point-QPointF(viewport.width()/2.0,viewport.height()/2.0)-m_pan;
     if(qAbs(m_rotation)>0.001){const qreal a=qDegreesToRadians(-m_rotation),x=p.x()*qCos(a)-p.y()*qSin(a),y=p.x()*qSin(a)+p.y()*qCos(a);p={x,y};}
     if(m_mirrorH)p.rx()=-p.x(); if(m_mirrorV)p.ry()=-p.y();
-    return p/m_zoom+QPointF(m_document?m_document->width()/2.0:0,m_document?m_document->height()/2.0:0);
+    return p/m_zoom+QPointF(m_document?m_document->width()/2.0:0.0,m_document?m_document->height()/2.0:0.0);
 }
 
 QPointF FluxCanvasEngine::canvasToWidget(const QPointF& point,const QSize& viewport) const {
-    QPointF p=(point-QPointF(m_document?m_document->width()/2.0:0,m_document?m_document->height()/2.0:0))*m_zoom;
+    QPointF p=(point-QPointF(m_document?m_document->width()/2.0:0.0,m_document?m_document->height()/2.0:0.0))*m_zoom;
     if(m_mirrorH)p.rx()=-p.x(); if(m_mirrorV)p.ry()=-p.y();
     if(qAbs(m_rotation)>0.001){const qreal a=qDegreesToRadians(m_rotation),x=p.x()*qCos(a)-p.y()*qSin(a),y=p.x()*qSin(a)+p.y()*qCos(a);p={x,y};}
     return p+QPointF(viewport.width()/2.0,viewport.height()/2.0)+m_pan;
 }
 
 QRectF FluxCanvasEngine::visibleCanvasRect(const QSize& viewport) const {
-    return QRectF(widgetToCanvas({0,0},viewport), widgetToCanvas({viewport.width(),viewport.height()},viewport)).normalized();
+    return QRectF(widgetToCanvas(QPointF(0.0,0.0),viewport), widgetToCanvas(QPointF(qreal(viewport.width()),qreal(viewport.height())),viewport)).normalized();
 }
 
 QImage FluxCanvasEngine::renderTile(const QPoint& grid) const {

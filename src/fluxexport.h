@@ -6,7 +6,23 @@
 #include <QVector>
 #include <functional>
 
-struct FluxRenderSettings { int width=0; int height=0; int fps=24; int startFrame=0; int endFrame=0; int bitrateKbps=12000; QString codec; bool transparent=false; QString colorSpace=QStringLiteral("sRGB"); };
+struct FluxRenderSettings {
+    int width=0;
+    int height=0;
+    int fps=24;
+    int startFrame=0;
+    int endFrame=0;
+    int step=1;
+    int bitrateKbps=12000;
+    QString codec;
+    QString profile;
+    QString filenamePattern=QStringLiteral("frame_%1.png");
+    QString audioPath;
+    QString colorSpace=QStringLiteral("sRGB");
+    QString range=QStringLiteral("Full");
+    bool transparent=false;
+    bool premultipliedAlpha=true;
+};
 struct FluxRenderJob { QString name; QString output; QString format; FluxRenderSettings settings; };
 
 class FluxExportEngine final {

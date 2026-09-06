@@ -66,41 +66,27 @@ void FluxCanvas::paintEvent(QPaintEvent*){
     p.fillRect(rect(),QColor("#20242a"));
     if(!m_document||!m_engine)return;
     const QRectF r=QRectF(canvasToWidget({0,0}),canvasToWidget({double(m_document->width()),double(m_document->height())})).normalized();
-    p.save();
-    p.setClipRect(r);
-    p.fillRect(r,QColor("#f4f5f7"));
+    p.save(); p.setClipRect(r); p.fillRect(r,QColor("#f4f5f7"));
     drawReference(p,r);
     if(m_onionSkin&&m_document->frame()>0)drawOnion(p,r,m_document->frame()-1,.20);
     if(m_onionSkin&&m_document->frame()+1<m_document->frameCount())drawOnion(p,r,m_document->frame()+1,.13);
-    m_engine->draw(p,size());
-    p.restore();
-    p.setPen(QPen(QColor("#4a505c"),1));
-    p.drawRect(r);
-    drawGuides(p);
-    drawSelectionOverlay(p);
+    m_engine->draw(p,size()); p.restore();
+    p.setPen(QPen(QColor("#4a505c"),1)); p.drawRect(r); drawGuides(p); drawSelectionOverlay(p);
     if(m_drawing&&isShapeTool()){
-        p.save();
-        p.setPen(QPen(QColor("#637083"),1,Qt::DashLine));
-        p.setBrush(Qt::NoBrush);
+        p.save(); p.setPen(QPen(QColor("#637083"),1,Qt::DashLine)); p.setBrush(Qt::NoBrush);
         const QRectF wr=QRectF(canvasToWidget(m_toolStart),m_cursor).normalized();
         if(m_tool=="Line")p.drawLine(canvasToWidget(m_toolStart),m_cursor);
         else if(m_tool=="Rectangle")p.drawRect(wr);
         else if(m_tool=="Ellipse")p.drawEllipse(wr);
-        else p.drawRect(wr);
-        p.restore();
+        else p.drawRect(wr); p.restore();
     }
     if(m_selecting&&m_tool=="Lasso Select"&&m_lasso.size()>1){
-        p.save();
-        p.setPen(QPen(QColor("#6f7b8a"),1,Qt::DashLine));
-        for(int i=1;i<m_lasso.size();++i)p.drawLine(m_lasso[i-1],m_lasso[i]);
-        p.restore();
+        p.save(); p.setPen(QPen(QColor("#6f7b8a"),1,Qt::DashLine));
+        for(int i=1;i<m_lasso.size();++i)p.drawLine(m_lasso[i-1],m_lasso[i]); p.restore();
     }
     if(m_selecting&&m_tool=="Rectangle Select"){
-        p.save();
-        p.setPen(QPen(QColor("#6f7b8a"),1,Qt::DashLine));
-        p.setBrush(Qt::NoBrush);
-        p.drawRect(QRectF(m_selectionStart,m_cursor).normalized());
-        p.restore();
+        p.save(); p.setPen(QPen(QColor("#6f7b8a"),1,Qt::DashLine)); p.setBrush(Qt::NoBrush);
+        p.drawRect(QRectF(m_selectionStart,m_cursor).normalized()); p.restore();
     }
 }
 void FluxCanvas::mousePressEvent(QMouseEvent*e){if(e->button()==Qt::RightButton){emit wheelRequested(e->globalPosition().toPoint());return;}if(e->button()!=Qt::LeftButton||!m_document)return;const QPointF canvasPoint=widgetToCanvas(e->position());if(m_tool=="Rectangle Select"||m_tool=="Lasso Select"){beginSelection(e->position());return;}if(m_tool=="Fill"){bucketFill(canvasPoint);return;}if(m_tool=="Color Picker"){pickColor(canvasPoint);return;}if(m_tool=="Text"){insertText(canvasPoint);return;}if(m_tool=="Transform"){if(!m_selection->isEmpty()){m_transform->reset(m_selection->bounds());m_transformStart=e->position();m_transforming=true;}return;}if(isShapeTool()){m_drawing=true;m_toolStart=canvasPoint;m_cursor=e->position();pushUndoState();update();return;}m_drawing=true;m_pressure=1.;m_tiltX=m_tiltY=m_rotationInput=0;m_lastPoint=canvasPoint;pushUndoState();m_brush->beginStroke({m_lastPoint,1.,0,0,0,0});handlePointer(e->position(),1.,0,0,0);update();}

@@ -23,6 +23,7 @@
 #include "fluxadvancedsuite.h"
 #include "fluxadvancedsuite.h"
 #include "fluxadvancedsuite.h"
+#include "fluxadvancedsuite.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -190,7 +191,7 @@ void FluxMainWindow::buildDocks(){
     resizeDocks({timeline},{250},Qt::Vertical);
 }
 
-QWidget*FluxMainWindow::makeColorPanel()QWidget*FluxMainWindow::makeColorPanel(){
+QWidget*FluxMainWindow::makeColorPanel(){
     auto*w=new QWidget;auto*l=new QVBoxLayout(w);l->setContentsMargins(12,12,12,12);l->setSpacing(10);l->addWidget(uiLabel("COLOR SELECTOR","panelTitle"));
     m_colorWheel=new FluxColorWheel(w);l->addWidget(m_colorWheel,0,Qt::AlignHCenter);auto*hex=new QLineEdit("#2A80FF",w);hex->setPlaceholderText("#RRGGBB");l->addWidget(hex);
     auto*apply=new QPushButton("Apply Color",w);l->addWidget(apply);

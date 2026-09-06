@@ -194,13 +194,13 @@ void FluxNextWindow::buildMenus(){
     auto* sh=view->addAction(QStringLiteral("Symmetry Horizontal"));sh->setCheckable(true);connect(sh,&QAction::toggled,this,&FluxNextWindow::toggleSymmetryH);
     auto* sv=view->addAction(QStringLiteral("Symmetry Vertical"));sv->setCheckable(true);connect(sv,&QAction::toggled,this,&FluxNextWindow::toggleSymmetryV);
     view->addSeparator();view->addAction(QStringLiteral("Fit Canvas"),this,[this]{m_canvas->fitCanvas();});
-    view->addAction(QStringLiteral("Mirror Canvas"),this,[this]{m_canvas->setMirrorHorizontal(!m_canvas->mirrorHorizontal());});
+    view->addAction(QStringLiteral("Mirror Canvas"),this,[this]{m_mirrorH=!m_mirrorH;m_canvas->setMirrorHorizontal(m_mirrorH);});
     view->addAction(QStringLiteral("Command Palette"),QKeySequence(QStringLiteral("Ctrl+K")),this,&FluxNextWindow::showAbout);
 
     auto* image=menuBar()->addMenu(QStringLiteral("Image"));
     image->addAction(QStringLiteral("Crop to Canvas"),this,[this]{m_canvas->fitCanvas();});
-    image->addAction(QStringLiteral("Rotate 90°"),this,[this]{m_canvas->setCanvasRotation(m_canvas->canvasRotation()+90);});
-    image->addAction(QStringLiteral("Reset Rotation"),this,[this]{m_canvas->setCanvasRotation(0);});
+    image->addAction(QStringLiteral("Rotate 90°"),this,[this]{m_canvasRotation+=90;if(m_canvasRotation>=360)m_canvasRotation=0;m_canvas->setCanvasRotation(m_canvasRotation);});
+    image->addAction(QStringLiteral("Reset Rotation"),this,[this]{m_canvasRotation=0;m_canvas->setCanvasRotation(0);});
 
     auto* layer=menuBar()->addMenu(QStringLiteral("Layer"));
     layer->addAction(QStringLiteral("Add Paint Layer"),this,&FluxNextWindow::addLayer);
@@ -304,24 +304,24 @@ void FluxNextWindow::openProject(){
     const auto p=QFileDialog::getOpenFileName(this,QStringLiteral("Open Flux Project"),{},QStringLiteral("Flux Projects (*.flux)"));
     if(p.isEmpty())return;QString e;
     if(!m_document->load(p,&e)){QMessageBox::critical(this,QStringLiteral("Open failed"),e);return;}
-    m_dirty=false;syncDocumentToUi();refreshLayerList();enterStudio();setStatus(QStringLiteral("Opened %1").arg(p));
+    m_dirty=false;syncDocumentToUi();refreshLayerList();enterStudio();statusBar()->showMessage(QStringLiteral("Opened %1").arg(p),2500);
 }
 
 void FluxNextWindow::saveProject(){
     if(m_document->path().isEmpty()){saveProjectAs();return;}QString e;
-    if(!m_document->save(m_document->path(),&e))QMessageBox::critical(this,QStringLiteral("Save failed"),e);else{m_dirty=false;updateWindowTitle();setStatus(QStringLiteral("Saved"));}
+    if(!m_document->save(m_document->path(),&e))QMessageBox::critical(this,QStringLiteral("Save failed"),e);else{m_dirty=false;updateWindowTitle();statusBar()->showMessage(QStringLiteral("Saved"),2500);}
 }
 
 void FluxNextWindow::saveProjectAs(){
     const auto p=QFileDialog::getSaveFileName(this,QStringLiteral("Save Flux Project"),QStringLiteral("Untitled.flux"),QStringLiteral("Flux Projects (*.flux)"));
     if(p.isEmpty())return;QString e;
-    if(!m_document->save(p,&e))QMessageBox::critical(this,QStringLiteral("Save failed"),e);else{m_dirty=false;updateWindowTitle();setStatus(QStringLiteral("Saved %1").arg(p));}
+    if(!m_document->save(p,&e))QMessageBox::critical(this,QStringLiteral("Save failed"),e);else{m_dirty=false;updateWindowTitle();statusBar()->showMessage(QStringLiteral("Saved %1").arg(p),2500);}
 }
 
 void FluxNextWindow::exportProjectImage(){
     const auto p=QFileDialog::getSaveFileName(this,QStringLiteral("Export Image"),QStringLiteral("Flux-Export.png"),QStringLiteral("PNG (*.png);;JPEG (*.jpg *.jpeg);;WebP (*.webp)"));
     if(p.isEmpty())return;QString e;
-    if(!m_document->exportImage(p,&e))QMessageBox::critical(this,QStringLiteral("Export failed"),e);else setStatus(QStringLiteral("Exported %1").arg(p));
+    if(!m_document->exportImage(p,&e))QMessageBox::critical(this,QStringLiteral("Export failed"),e);else statusBar()->showMessage(QStringLiteral("Exported %1").arg(p),2500);
 }
 
 void FluxNextWindow::enterStudio(){
@@ -347,7 +347,7 @@ void FluxNextWindow::setFrame(int f){f=std::clamp(f,0,m_document->frameCount()-1
 void FluxNextWindow::previousFrame(){setFrame(m_document->frame()?m_document->frame()-1:m_document->frameCount()-1);}
 void FluxNextWindow::nextFrame(){setFrame((m_document->frame()+1)%qMax(1,m_document->frameCount()));}
 void FluxNextWindow::togglePlayback(){m_playing=!m_playing;if(m_playing)m_playTimer->start();else m_playTimer->stop();}
-void FluxNextWindow::updateZoom(int value){if(value<=0){m_canvas->fitCanvas();return;}m_canvas->setZoom(value/100.0);if(m_zoomLabel)m_zoomLabel->setText(QString::number(value)+QStringLiteral("%"));}
+void FluxNextWindow::updateZoom(int value){if(value<=0){m_canvas->fitCanvas();return;}m_canvas->fitCanvas();if(m_zoomLabel)m_zoomLabel->setText(QString::number(value)+QStringLiteral("%"));}
 void FluxNextWindow::setBrushSize(int v){m_canvas->setBrushSize(v);if(m_brushLabel)m_brushLabel->setText(QString::number(v)+QStringLiteral(" px"));}
 void FluxNextWindow::chooseColor(){auto c=QColorDialog::getColor(m_document->foreground(),this,QStringLiteral("Flux Color"));if(c.isValid()){m_document->setForeground(c);m_canvas->setBrushColor(c);}}
 void FluxNextWindow::toggleGrid(bool b){m_canvas->setGridEnabled(b);m_canvas->update();}
@@ -355,7 +355,7 @@ void FluxNextWindow::toggleRulers(bool b){m_canvas->setRulersEnabled(b);m_canvas
 void FluxNextWindow::toggleOnion(bool b){m_canvas->toggleOnionSkin(b);m_canvas->update();}
 void FluxNextWindow::toggleSymmetryH(bool b){m_canvas->setSymmetry(b,m_canvas->symmetryVertical());m_canvas->update();}
 void FluxNextWindow::toggleSymmetryV(bool b){m_canvas->setSymmetry(m_canvas->symmetryHorizontal(),b);m_canvas->update();}
-void FluxNextWindow::setTool(const QString& s){m_canvas->setTool(s);setStatus(QStringLiteral("Tool: %1").arg(s));}
+void FluxNextWindow::setTool(const QString& s){m_canvas->setTool(s);statusBar()->showMessage(QStringLiteral("Tool: %1").arg(s),2500);}
 void FluxNextWindow::showAbout(){QMessageBox::about(this,QStringLiteral("Flux Studio"),QStringLiteral("Flux Studio 1.0 Preview\nNative C++20 / Qt 6\nDRAW → ANIMATE → COMPOSE → EXPORT"));}
 void FluxNextWindow::markDirty(){m_dirty=true;updateWindowTitle();}
 void FluxNextWindow::syncDocumentToUi(){if(m_projectLabel)m_projectLabel->setText(QStringLiteral("%1  •  %2 × %3  •  %4 fps").arg(m_document->name()).arg(m_document->width()).arg(m_document->height()).arg(qMax(1,1000/m_playTimer->interval())));if(m_frames){QSignalBlocker block(m_frames->model());m_frames->clear();for(int i=0;i<m_document->frameCount();++i)m_frames->addItem(QString::number(i+1));m_frames->setCurrentRow(m_document->frame());}}

@@ -5,7 +5,7 @@ RequestExecutionLevel admin
 
 !define APP_NAME "Flux Studio"
 !define APP_EXE "Flux Studio.exe"
-!define APP_VERSION "0.8.0"
+!define APP_VERSION "0.9.0"
 !define PUBLISHER "Flux"
 !define INSTALL_DIR "$PROGRAMFILES64\Flux Studio"
 !define PROJECT_ROOT "..\.."

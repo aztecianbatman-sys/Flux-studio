@@ -1,6 +1,7 @@
 #include "fluxprojectpackage.h"
 #include "fluxdocument.h"
 
+#include <QCryptographicHash>
 #include <QDataStream>
 #include <QDir>
 #include <QFile>
@@ -14,7 +15,7 @@
 
 namespace {
 constexpr quint32 Magic=0x464C5558;
-constexpr quint32 Version=1;
+constexpr quint32 Version=2;
 
 bool writeFile(QDataStream& out,const QString& name,const QByteArray& data,QString* error){
     out<<name<<quint64(data.size());
@@ -43,12 +44,14 @@ bool FluxProjectPackage::save(const QString&filePath,const FluxDocument&document
     const QFileInfo mi(manifest);const QString sidecar=mi.absolutePath()+QDir::separator()+mi.completeBaseName()+QStringLiteral(".fluxdata");
     const QDir root(mi.absolutePath());QStringList files;files<<mi.fileName();
     for(const auto& p:QDir(sidecar).entryList(QStringList()<<"*.png",QDir::Files,QDir::Name))files<<QString("%1/%2").arg(QFileInfo(sidecar).fileName(),p);
-    QJsonObject meta;meta["format"]="Flux Package";meta["version"]=static_cast<qint64>(Version);QJsonArray entries;for(const auto& rel:files)entries.append(rel);meta["entries"]=entries;const QByteArray metaBytes=QJsonDocument(meta).toJson(QJsonDocument::Compact);
+    QJsonObject meta;meta["format"]="Flux Package";meta["version"]=static_cast<qint64>(Version);QJsonArray entries;
+    QVector<QPair<QString,QByteArray>> payloads;payloads.reserve(files.size());
+    for(const auto& rel:files){QFile f(root.filePath(rel));if(!f.open(QIODevice::ReadOnly)){if(error)*error=f.errorString();return false;}const QByteArray data=f.readAll();payloads.append({rel,data});QJsonObject e;e["path"]=rel;e["size"]=static_cast<qint64>(data.size());e["sha256"]=QString::fromLatin1(QCryptographicHash::hash(data,QCryptographicHash::Sha256).toHex());entries.append(e);}meta["entries"]=entries;
+    const QByteArray metaBytes=QJsonDocument(meta).toJson(QJsonDocument::Compact);
     QSaveFile outFile(filePath);if(!outFile.open(QIODevice::WriteOnly)){if(error)*error=outFile.errorString();return false;}
     QDataStream out(&outFile);out.setVersion(QDataStream::Qt_6_5);out<<Magic<<Version<<quint32(metaBytes.size());
     if(out.writeRawData(metaBytes.constData(),metaBytes.size())!=metaBytes.size()){if(error)*error="Could not write package manifest";return false;}
-    out<<quint32(files.size());
-    for(const auto& rel:files){QFile f(root.filePath(rel));if(!f.open(QIODevice::ReadOnly)){if(error)*error=f.errorString();return false;}if(!writeFile(out,rel,f.readAll(),error))return false;}
+    out<<quint32(payloads.size());for(const auto& pair:payloads)if(!writeFile(out,pair.first,pair.second,error))return false;
     if(!outFile.commit()){if(error)*error=outFile.errorString();return false;}return true;
 }
 
@@ -58,9 +61,10 @@ bool FluxProjectPackage::load(const QString&filePath,FluxDocument&document,QStri
     if(in.status()!=QDataStream::Ok||magic!=Magic||version>Version||metaSize>64u*1024u*1024u){if(error)*error="Not a valid Flux package";return false;}
     QByteArray metaBytes(metaSize,Qt::Uninitialized);if(metaSize>0&&in.readRawData(metaBytes.data(),int(metaSize))!=int(metaSize)){if(error)*error="Truncated package manifest";return false;}
     QJsonParseError pe{};const QJsonDocument md=QJsonDocument::fromJson(metaBytes,&pe);if(pe.error!=QJsonParseError::NoError||!md.isObject()){if(error)*error="Invalid Flux package manifest";return false;}
+    QHash<QString,QString> expected;for(const auto&v:md.object().value("entries").toArray()){const auto e=v.toObject();expected.insert(e.value("path").toString(),e.value("sha256").toString());}
     QTemporaryDir tmp;if(!tmp.isValid()){if(error)*error="Could not create extraction directory";return false;}
     quint32 count=0;in>>count;if(in.status()!=QDataStream::Ok||count>100000){if(error)*error="Invalid package entry count";return false;}
     const QDir root(tmp.path());
-    for(quint32 i=0;i<count;++i){QString name;QByteArray data;if(!readFile(in,&name,&data,error))return false;const QString clean=QDir::cleanPath(name);if(clean.startsWith("../")||clean==".."||clean.contains("/../")){if(error)*error="Unsafe package entry";return false;}const QFileInfo info(root.filePath(clean));QDir().mkpath(info.absolutePath());QFile f(info.filePath());if(!f.open(QIODevice::WriteOnly)){if(error)*error=f.errorString();return false;}if(f.write(data)!=data.size()){if(error)*error=f.errorString();return false;}}
+    for(quint32 i=0;i<count;++i){QString name;QByteArray data;if(!readFile(in,&name,&data,error))return false;const QString clean=QDir::cleanPath(name);if(clean.startsWith("../")||clean==".."||clean.contains("/../")||QFileInfo(clean).isAbsolute()){if(error)*error="Unsafe package entry";return false;}if(expected.contains(name)){const QString actual=QString::fromLatin1(QCryptographicHash::hash(data,QCryptographicHash::Sha256).toHex());if(actual.compare(expected.value(name),Qt::CaseInsensitive)!=0){if(error)*error=QStringLiteral("Checksum mismatch: ")+name;return false;}}const QFileInfo info(root.filePath(clean));QDir().mkpath(info.absolutePath());QFile f(info.filePath());if(!f.open(QIODevice::WriteOnly)){if(error)*error=f.errorString();return false;}if(f.write(data)!=data.size()){if(error)*error=f.errorString();return false;}}
     const QString manifest=root.filePath("project.flux");if(!QFileInfo::exists(manifest)){if(error)*error="Package does not contain a project manifest";return false;}return document.load(manifest,error);
 }

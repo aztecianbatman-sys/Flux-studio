@@ -43,7 +43,7 @@ bool FluxProjectPackage::save(const QString&filePath,const FluxDocument&document
     const QFileInfo mi(manifest);const QString sidecar=mi.absolutePath()+QDir::separator()+mi.completeBaseName()+QStringLiteral(".fluxdata");
     const QDir root(mi.absolutePath());QStringList files;files<<mi.fileName();
     for(const auto& p:QDir(sidecar).entryList(QStringList()<<"*.png",QDir::Files,QDir::Name))files<<QString("%1/%2").arg(QFileInfo(sidecar).fileName(),p);
-    QJsonObject meta;meta["format"]="Flux Package";meta["version"]=Version;QJsonArray entries;for(const auto& rel:files)entries.append(rel);meta["entries"]=entries;const QByteArray metaBytes=QJsonDocument(meta).toJson(QJsonDocument::Compact);
+    QJsonObject meta;meta["format"]="Flux Package";meta["version"]=static_cast<qint64>(Version);QJsonArray entries;for(const auto& rel:files)entries.append(rel);meta["entries"]=entries;const QByteArray metaBytes=QJsonDocument(meta).toJson(QJsonDocument::Compact);
     QSaveFile outFile(filePath);if(!outFile.open(QIODevice::WriteOnly)){if(error)*error=outFile.errorString();return false;}
     QDataStream out(&outFile);out.setVersion(QDataStream::Qt_6_5);out<<Magic<<Version<<quint32(metaBytes.size());
     if(out.writeRawData(metaBytes.constData(),metaBytes.size())!=metaBytes.size()){if(error)*error="Could not write package manifest";return false;}

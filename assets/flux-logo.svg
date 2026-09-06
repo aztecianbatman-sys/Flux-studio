@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#070a10"/><stop offset="1" stop-color="#0f1420"/></linearGradient>
+    <linearGradient id="flux" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#a84cff"/><stop offset="0.48" stop-color="#4e7dff"/><stop offset="1" stop-color="#70e8ff"/></linearGradient>
+    <linearGradient id="spark" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#62a8ff"/><stop offset="0.55" stop-color="#9d63ff"/><stop offset="1" stop-color="#ff82df"/></linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="11" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect x="18" y="18" width="988" height="988" rx="205" fill="url(#bg)"/>
+  <rect x="18" y="18" width="988" height="988" rx="205" fill="none" stroke="#26344b" stroke-width="8"/>
+  <g filter="url(#glow)" fill="none" stroke="url(#flux)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M284 782 C296 618 310 452 360 354 C397 280 473 240 584 240 L827 240" stroke-width="86"/>
+    <path d="M329 570 C351 506 397 464 471 446 L756 446" stroke-width="82"/>
+    <path d="M346 751 C402 688 447 642 497 596 L600 596" stroke-width="76"/>
+  </g>
+  <path d="M276 782 C289 614 306 451 357 353 C394 280 470 241 583 241 L826 241" fill="none" stroke="url(#flux)" stroke-width="84" stroke-linecap="round"/>
+  <path d="M329 570 C351 507 397 464 471 447 L756 447" fill="none" stroke="url(#flux)" stroke-width="80" stroke-linecap="round"/>
+  <path d="M346 751 C403 687 448 641 497 596 L600 596" fill="none" stroke="url(#flux)" stroke-width="74" stroke-linecap="round"/>
+  <path d="M681 720 L694 770 L744 783 L694 796 L681 848 L668 796 L618 783 L668 770 Z" fill="url(#spark)" filter="url(#glow)"/>
+  <path d="M681 720 L694 770 L744 783 L694 796 L681 848 L668 796 L618 783 L668 770 Z" fill="url(#spark)"/>
+</svg>

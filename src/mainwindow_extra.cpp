@@ -1,10 +1,13 @@
 #include "mainwindow.h"
 #include "fluxproductiondock.h"
+#include <QAction>
+#include <QComboBox>
 #include <QFileInfo>
 #include <QLabel>
 #include <QPixmap>
 #include <QStackedWidget>
 #include <QStatusBar>
+#include <QToolBar>
 #include <QVBoxLayout>
 
 void FluxMainWindow::polish(){
@@ -12,18 +15,10 @@ void FluxMainWindow::polish(){
 *{font-family:"Segoe UI";font-size:13px;color:#e7ebf2}QMainWindow{background:#0b0f14}QMenuBar{background:#10151c;border-bottom:1px solid #27313d;padding:3px 7px}QMenuBar::item{padding:6px 10px;border-radius:5px}QMenuBar::item:selected{background:#1e2834}QMenu{background:#151b23;border:1px solid #303b49;padding:5px}QMenu::item{padding:7px 22px 7px 10px;border-radius:5px}QMenu::item:selected{background:#263443}QToolBar{background:#111820;border:0;border-bottom:1px solid #293440;padding:5px;spacing:4px}QToolBar#FluxTopBar QToolButton{min-height:30px;padding:4px 9px;border-radius:6px}QToolBar#FluxTopBar QToolButton:hover{background:#202c38}QToolBar#FluxToolRail{background:#0f151b;border-right:1px solid #293440;padding:7px 5px}QToolBar#FluxToolRail QToolButton{min-width:38px;min-height:38px;margin:2px 0;border-radius:8px;font-weight:700}QToolBar#FluxToolRail QToolButton:hover{background:#1c2834}QToolBar#FluxToolRail QToolButton:checked{background:#304051;border:1px solid #4b5d73}QDockWidget{background:#111820;border:1px solid #27323e}QDockWidget::title{background:#151d26;padding:9px 11px;border-bottom:1px solid #293542;font-weight:700}QTreeWidget,QListWidget{background:#0f151b;border:1px solid #283440;border-radius:8px;outline:0}QTreeWidget::item,QListWidget::item{padding:5px;border-radius:5px}QTreeWidget::item:selected,QListWidget::item:selected{background:#2b3949}QPushButton{background:#1a232d;border:1px solid #303e4e;border-radius:8px;padding:8px 12px}QPushButton:hover{background:#232f3c;border-color:#4a5a70}QPushButton:pressed,QPushButton:checked{background:#2b3949}QComboBox,QSpinBox,QLineEdit{background:#171f28;border:1px solid #303e4e;border-radius:7px;padding:5px 8px}QSlider::groove:horizontal{height:4px;background:#303e4e;border-radius:2px}QSlider::handle:horizontal{width:13px;margin:-5px 0;border-radius:6px;background:#e8ebef}QGroupBox{border:1px solid #293541;border-radius:9px;margin-top:9px;padding-top:9px}QGroupBox::title{subcontrol-origin:margin;left:10px;padding:0 5px;color:#8e9aaa;font-size:11px;font-weight:700}QStatusBar{background:#0d1218;border-top:1px solid #27323d}QLabel[role="brand"]{font-size:36px;font-weight:800;letter-spacing:10px;color:#f5f7fa}QLabel[role="brandSub"]{font-size:10px;font-weight:700;letter-spacing:3px;color:#6d7a8c}QLabel[role="meta"],QLabel[role="hint"]{font-size:10px;letter-spacing:1.3px;color:#687689;font-weight:700}QLabel[role="eyebrow"]{font-size:11px;letter-spacing:2.5px;color:#8291a6;font-weight:800}QLabel[role="headline"]{font-size:36px;font-weight:700;color:#f6f7fa}QLabel[role="subhead"]{font-size:14px;color:#919cad}QLabel[role="footer"]{font-size:10px;letter-spacing:1.3px;color:#5e6b7c;font-weight:700}QLabel[role="topLabel"]{font-size:10px;color:#778497;font-weight:700}QLabel[role="topValue"]{font-size:11px;color:#b6bec9;font-weight:700}QLabel[role="cursor"]{font-size:11px;color:#718095;min-width:75px}QLabel[role="panelTitle"]{font-size:11px;letter-spacing:1.6px;font-weight:800}QPushButton#homePrimary{background:#26384a;border:1px solid #536b84;text-align:left;padding:22px;border-radius:14px;font-size:13px;font-weight:700}QPushButton#homePrimary:hover{background:#30475d}QPushButton#homeCard{background:#151d25;border:1px solid #2a3541;text-align:left;padding:20px;border-radius:14px;font-size:12px;font-weight:700}QPushButton#homeCard:hover{background:#1d2833;border-color:#46576d}QListWidget#homeRecentList{background:transparent;border:0}
 )STYLE");
     if(!m_statusLabel){m_statusLabel=new QLabel("Ready • Flux Core • GPU probe available");statusBar()->addWidget(m_statusLabel,1);}
-    for(auto*label:m_home->findChildren<QLabel*>()){
-        if(label->property("role").toString()==QStringLiteral("brandSub")) label->setText(QStringLiteral("STUDIO / 0.9"));
-    }
-    if(!m_home->findChild<QLabel*>(QStringLiteral("zheHomeArt"))){
-        auto*root=qobject_cast<QVBoxLayout*>(m_home->layout());
-        if(root){
-            auto*art=new QLabel(m_home);art->setObjectName(QStringLiteral("zheHomeArt"));art->setAlignment(Qt::AlignCenter);art->setMinimumHeight(180);art->setMaximumHeight(300);art->setScaledContents(false);
-            const QPixmap source(QStringLiteral(":/art/zhe.svg"));
-            art->setPixmap(source.scaled(620,300,Qt::KeepAspectRatio,Qt::SmoothTransformation));
-            root->insertWidget(1,art,0,Qt::AlignHCenter);
-        }
-    }
+    for(auto*label:m_home->findChildren<QLabel*>())if(label->property("role").toString()==QStringLiteral("brandSub"))label->setText(QStringLiteral("STUDIO / 0.9"));
+    if(!m_home->findChild<QLabel*>(QStringLiteral("zheHomeArt"))){auto*root=qobject_cast<QVBoxLayout*>(m_home->layout());if(root){auto*art=new QLabel(m_home);art->setObjectName(QStringLiteral("zheHomeArt"));art->setAlignment(Qt::AlignCenter);art->setMinimumHeight(180);art->setMaximumHeight(300);const QPixmap source(QStringLiteral(":/art/zhe.svg"));art->setPixmap(source.scaled(620,300,Qt::KeepAspectRatio,Qt::SmoothTransformation));root->insertWidget(1,art,0,Qt::AlignHCenter);}}
+    if(m_topBar){for(auto*combo:m_topBar->findChildren<QComboBox*>()){if(combo->findText("Line")<0){combo->addItems({"Line","Rectangle","Ellipse","Polygon","Star","Bezier","Gradient","Text"});break;}}}
+    if(m_toolRail && !m_toolRail->findChild<QAction*>(QStringLiteral("FluxExtraTools"))){auto*marker=new QAction(this);marker->setObjectName(QStringLiteral("FluxExtraTools"));m_toolRail->insertSeparator(m_toolRail->actions().isEmpty()?nullptr:m_toolRail->actions().last());for(const auto&pair:QList<QPair<QString,QString>>{{"Line","N"},{"Rectangle","R"},{"Ellipse","E"},{"Polygon","G"},{"Star","*"},{"Bezier","V"},{"Gradient","D"},{"Text","T"},{"Fill","F"},{"Color Picker","I"}}){auto*a=m_toolRail->addAction(pair.second);a->setToolTip(pair.first);connect(a,&QAction::triggered,this,[this,pair]{m_canvas->setTool(pair.first);});}}
 }
 
 void FluxMainWindow::showRecoveryBrowser(){
@@ -33,10 +28,7 @@ void FluxMainWindow::showRecoveryBrowser(){
 }
 
 void FluxMainWindow::markModified(){
-    const QString name = m_filePath.isEmpty()
-        ? QStringLiteral("Untitled")
-        : QFileInfo(m_filePath).completeBaseName();
+    const QString name = m_filePath.isEmpty()?QStringLiteral("Untitled"):QFileInfo(m_filePath).completeBaseName();
     setWindowTitle(QStringLiteral("Flux Studio — %1 *").arg(name));
-    if(m_statusLabel)
-        m_statusLabel->setText(QStringLiteral("Modified • Unsaved changes"));
+    if(m_statusLabel)m_statusLabel->setText(QStringLiteral("Modified • Unsaved changes"));
 }

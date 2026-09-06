@@ -17,4 +17,4 @@ void FluxRenderQueueWidget::clearQueue(){m_queue.clear();refresh();}
 void FluxRenderQueueWidget::moveSelectedUp(){const int r=m_list->currentRow();if(r<=0)return;auto jobs=m_queue.jobs();qSwap(jobs[r],jobs[r-1]);m_queue.setJobs(jobs);refresh();m_list->setCurrentRow(r-1);}
 void FluxRenderQueueWidget::moveSelectedDown(){const int r=m_list->currentRow();if(r<0||r>=m_list->count()-1)return;auto jobs=m_queue.jobs();qSwap(jobs[r],jobs[r+1]);m_queue.setJobs(jobs);refresh();m_list->setCurrentRow(r+1);}
 void FluxRenderQueueWidget::renderAll(){emit renderRequested();}
-void FluxRenderQueueWidget::refresh(){m_list->clear();for(const auto&j:m_queue.jobs())m_list->addItem(QString("%1  •  %2  •  %3").arg(j.name,j.format,j.output));}
+void FluxRenderQueueWidget::refresh(){m_list->clear();for(const auto&j:m_queue.jobs())m_list->addItem(QString("%1  •  %2  •  %3").arg(j.job.name,j.job.format,j.job.output));}

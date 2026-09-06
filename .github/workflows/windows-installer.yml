@@ -16,17 +16,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - name: Install Qt 6.8.3
         uses: jurplel/install-qt-action@v4
         with:
           version: 6.8.3
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
           modules: ''
           cache: true
-          tools: tools_cmake,tools_ninja
+          cache-key-prefix: flux-studio-qt-windows-x64
+          add-tools-to-path: true
 
       - name: Configure
         shell: pwsh
-        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 
       - name: Build
         shell: pwsh
@@ -45,26 +54,20 @@ jobs:
 
           $windeploy = Get-Command windeployqt.exe -ErrorAction SilentlyContinue
           if (!$windeploy) {
-            if ($env:Qt6_DIR) {
-              $windeploy = Get-ChildItem -Path $env:Qt6_DIR -Filter windeployqt.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-            }
+            throw 'windeployqt.exe could not be located on PATH.'
           }
-          if (!$windeploy) {
-            throw 'windeployqt.exe could not be located.'
-          }
-
           & $windeploy.Source --release --compiler-runtime --no-translations 'dist\Flux Studio.exe'
           if ($LASTEXITCODE -ne 0) {
             throw "windeployqt failed with exit code $LASTEXITCODE"
           }
 
           New-Item -ItemType Directory -Force -Path 'dist\runtime' | Out-Null
-          Set-Content -Path 'dist\runtime\README.txt' -Value @'
+          @'
 Flux Studio 0.6.0 — Windows x64
 
-This directory contains the Qt runtime deployed with Flux Studio.
-Audio/video import and encoding features require FFmpeg/FFprobe to be installed separately and available on PATH.
-'@
+Qt runtime is bundled with this build.
+Audio/video import and encoding features require FFmpeg/FFprobe separately available on PATH.
+'@ | Set-Content -Path 'dist\runtime\README.txt'
 
       - name: Install NSIS
         shell: pwsh
@@ -73,9 +76,18 @@ Audio/video import and encoding features require FFmpeg/FFprobe to be installed 
       - name: Build installer
         shell: pwsh
         run: |
-          & "$env:ProgramFiles(x86)\NSIS\makensis.exe" 'packaging\windows\installer.nsi'
+          $ErrorActionPreference = 'Stop'
+          $nsis = Join-Path ${env:ProgramFiles(x86)} 'NSIS\makensis.exe'
+          if (!(Test-Path $nsis)) {
+            throw "makensis.exe not found: $nsis"
+          }
+          & $nsis 'packaging\windows\installer.nsi'
           if ($LASTEXITCODE -ne 0) {
             throw "NSIS failed with exit code $LASTEXITCODE"
+          }
+          $installer = Join-Path $env:GITHUB_WORKSPACE 'Flux-Studio-0.6.0-Windows-x64-Setup.exe'
+          if (!(Test-Path $installer)) {
+            throw "Installer was not produced: $installer"
           }
 
       - name: Create portable ZIP

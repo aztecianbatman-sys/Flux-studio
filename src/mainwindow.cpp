@@ -20,6 +20,7 @@
 #include "fluxadvancedsuite.h"
 #include "fluxadvancedsuite.h"
 #include "fluxadvancedsuite.h"
+#include "fluxadvancedsuite.h"
 
 #include <QAction>
 #include <QActionGroup>

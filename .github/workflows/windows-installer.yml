@@ -1,0 +1,92 @@
+name: Build Windows Installer
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-windows:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6.8.3
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.8.3
+          modules: ''
+          cache: true
+          tools: tools_cmake,tools_ninja
+
+      - name: Configure
+        shell: pwsh
+        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build build --config Release --parallel
+
+      - name: Stage application
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $exe = Join-Path $env:GITHUB_WORKSPACE 'build\Release\Flux Studio.exe'
+          if (!(Test-Path $exe)) {
+            throw "Flux Studio executable was not produced: $exe"
+          }
+          Copy-Item $exe 'dist\Flux Studio.exe'
+          $windeploy = Get-ChildItem -Path $env:Qt6_DIR -Filter windeployqt.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (!$windeploy) {
+            $windeploy = Get-Command windeployqt.exe -ErrorAction SilentlyContinue
+          }
+          if (!$windeploy) {
+            throw 'windeployqt.exe could not be located.'
+          }
+          & $windeploy.FullName --release --compiler-runtime --no-translations 'dist\Flux Studio.exe'
+          if ($LASTEXITCODE -ne 0) {
+            throw "windeployqt failed with exit code $LASTEXITCODE"
+          }
+          New-Item -ItemType Directory -Force -Path 'dist\runtime' | Out-Null
+          Set-Content -Path 'dist\runtime\README.txt' -Value @'
+Flux Studio 0.6.0 — Windows x64
+
+This directory contains the Qt runtime deployed with Flux Studio.
+Audio/video import and encoding features require FFmpeg/FFprobe to be installed separately and available on PATH.
+'@
+
+      - name: Install NSIS
+        shell: pwsh
+        run: choco install nsis --no-progress -y
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          & "$env:ProgramFiles(x86)\NSIS\makensis.exe" 'packaging\windows\installer.nsi'
+          if ($LASTEXITCODE -ne 0) {
+            throw "NSIS failed with exit code $LASTEXITCODE"
+          }
+
+      - name: Create portable ZIP
+        shell: pwsh
+        run: Compress-Archive -Path 'dist\*' -DestinationPath 'Flux-Studio-0.6.0-Windows-x64-Portable.zip' -Force
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Flux-Studio-0.6.0-Windows-x64-Installer
+          path: Flux-Studio-0.6.0-Windows-x64-Setup.exe
+          if-no-files-found: error
+
+      - name: Upload portable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Flux-Studio-0.6.0-Windows-x64-Portable
+          path: Flux-Studio-0.6.0-Windows-x64-Portable.zip
+          if-no-files-found: error

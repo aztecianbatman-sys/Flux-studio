@@ -14,6 +14,7 @@ protected:
     void paintEvent(QPaintEvent*) override;
     void mousePressEvent(QMouseEvent*) override;
     void mouseMoveEvent(QMouseEvent*) override;
+    void mouseReleaseEvent(QMouseEvent*) override;
 private:
     void pick(const QPointF& point);
     QColor m_color{42, 128, 255};

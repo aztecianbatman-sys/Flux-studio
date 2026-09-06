@@ -76,27 +76,36 @@ jobs:
           if (-not (Test-Path $nsis)) { throw "NSIS not found: $nsis" }
           & $nsis /V2 'packaging\windows\installer.nsi'
           if ($LASTEXITCODE -ne 0) { throw "NSIS failed with exit code $LASTEXITCODE" }
-          $installer = 'Flux-Studio-0.8.0-Windows-x64-Setup.exe'
+          $installer = 'Flux-Studio-0.9.0-Windows-x64-Setup.exe'
           if (-not (Test-Path $installer)) { throw "Installer missing: $installer" }
+
+      - name: Verify package contents
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = 'dist\Flux Studio.exe'
+          if (-not (Test-Path $exe)) { throw "Portable executable missing" }
+          $required = @('Qt6Core.dll','Qt6Gui.dll','Qt6Widgets.dll')
+          foreach($file in $required) { if (-not (Test-Path (Join-Path 'dist' $file))) { throw "Missing deployed Qt runtime: $file" } }
 
       - name: Create portable ZIP
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          Compress-Archive -Path 'dist\*' -DestinationPath 'Flux-Studio-0.8.0-Windows-x64-Portable.zip' -Force
+          Compress-Archive -Path 'dist\*' -DestinationPath 'Flux-Studio-0.9.0-Windows-x64-Portable.zip' -Force
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: Flux-Studio-0.8.0-Windows-x64-Installer
-          path: Flux-Studio-0.8.0-Windows-x64-Setup.exe
+          name: Flux-Studio-0.9.0-Windows-x64-Installer
+          path: Flux-Studio-0.9.0-Windows-x64-Setup.exe
           if-no-files-found: error
           retention-days: 14
 
       - name: Upload portable build
         uses: actions/upload-artifact@v4
         with:
-          name: Flux-Studio-0.8.0-Windows-x64-Portable
-          path: Flux-Studio-0.8.0-Windows-x64-Portable.zip
+          name: Flux-Studio-0.9.0-Windows-x64-Portable
+          path: Flux-Studio-0.9.0-Windows-x64-Portable.zip
           if-no-files-found: error
           retention-days: 14

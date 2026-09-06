@@ -1,8 +1,11 @@
 #pragma once
 #include <QMainWindow>
+#include <QListWidget>
+#include <QStatusBar>
+#include <QSpinBox>
 #include <QString>
 
-class QLabel; class QListWidget; class QSlider; class QSpinBox; class QTreeWidget; class QTimer; class QComboBox; class QTreeWidgetItem;
+class QLabel; class QSlider; class QTreeWidget; class QTimer; class QComboBox; class QTreeWidgetItem;
 class FluxCanvas; class FluxDocument;
 
 class FluxMainWindow final : public QMainWindow {

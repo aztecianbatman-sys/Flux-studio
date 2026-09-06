@@ -68,6 +68,19 @@ The `main` branch now includes the advanced drawing/layer core plus production f
 - GPU capability/performance probe
 - Recent projects and workspace persistence
 
+## Windows installer
+
+The repository includes an automated Windows x64 packaging pipeline at `.github/workflows/windows-installer.yml`.
+
+The pipeline:
+- builds the Qt application in Release mode
+- deploys the Qt runtime with `windeployqt`
+- creates a standard NSIS installer with Start Menu and desktop shortcuts
+- creates a portable ZIP build
+- uploads both packages as GitHub Actions artifacts
+
+The installer definition lives at `packaging/windows/installer.nsi`.
+
 ## Architecture
 
 ```text

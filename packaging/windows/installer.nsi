@@ -8,10 +8,10 @@ RequestExecutionLevel admin
 !define APP_VERSION "0.6.0"
 !define PUBLISHER "Flux"
 !define INSTALL_DIR "$PROGRAMFILES64\Flux Studio"
-!define DIST_DIR "${__FILEDIR__}\..\..\dist"
+!define PROJECT_ROOT "..\.."
 
 Name "${APP_NAME}"
-OutFile "Flux-Studio-${APP_VERSION}-Windows-x64-Setup.exe"
+OutFile "${PROJECT_ROOT}\Flux-Studio-${APP_VERSION}-Windows-x64-Setup.exe"
 InstallDir "${INSTALL_DIR}"
 InstallDirRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\FluxStudio" "InstallLocation"
 
@@ -42,7 +42,7 @@ VIAddVersionKey "ProductVersion" "${APP_VERSION}"
 Section "Flux Studio" SEC_MAIN
   SectionIn RO
   SetOutPath "$INSTDIR"
-  File /r "${DIST_DIR}\*"
+  File /r "${PROJECT_ROOT}\dist\*"
 
   WriteUninstaller "$INSTDIR\Uninstall Flux Studio.exe"
 

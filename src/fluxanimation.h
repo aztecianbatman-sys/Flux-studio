@@ -3,6 +3,7 @@
 #include <QPointF>
 #include <QVector>
 #include <QString>
+#include <QVariant>
 
 struct FluxKeyframe { int frame=0; QVariant value; bool hold=false; QString interpolation=QStringLiteral("Bezier"); };
 struct FluxAnimationTrack { QString id; QString name; QString property=QStringLiteral("Opacity"); bool muted=false; bool locked=false; QVector<FluxKeyframe> keys; };

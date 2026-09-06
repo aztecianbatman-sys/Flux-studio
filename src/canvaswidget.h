@@ -33,6 +33,6 @@ private:
     void beginTabletStroke(QTabletEvent*e); void updateTabletStroke(QTabletEvent*e); void finishTabletStroke(QTabletEvent*e); bool tabletUsesPan(QTabletEvent*e)const; bool tabletUsesWheel(QTabletEvent*e)const; QString tabletPointerName(QTabletEvent*e)const;
     bool isShapeTool()const; void drawShape(const QPointF&from,const QPointF&to); void bucketFill(const QPointF&point); void pickColor(const QPointF&point); void insertText(const QPointF&point);
     FluxDocument* m_document{}; FluxCanvasEngine* m_engine{}; FluxSelectionEngine* m_selection{}; FluxTransform* m_transform{}; BrushEngine* m_brush{};
-    QPointF m_lastPoint,m_cursor,m_selectionStart,m_transformStart,m_toolStart; QVector<QPointF> m_lasso; bool m_drawing=false,m_selecting=false,m_onionSkin=true,m_grid=true,m_rulers=true,m_perspective=false,m_transforming=false,m_symmetryH=false,m_symmetryV=false;
+    QPointF m_lastPoint,m_cursor,m_selectionStart,m_transformStart,m_toolStart; QVector<QPointF> m_lasso; bool m_drawing=false,m_selecting=false,m_onionSkin=true,m_grid=false,m_rulers=false,m_perspective=false,m_transforming=false,m_symmetryH=false,m_symmetryV=false;
     int m_brushSize=24; qreal m_stabilization=.12; QColor m_brushColor=Qt::black; QString m_tool=QStringLiteral("Brush"); QString m_preTabletTool; bool m_tabletEraserActive=false,m_tabletPanActive=false,m_tabletWheelActive=false; qreal m_pressure=1.0,m_tiltX=0,m_tiltY=0,m_rotationInput=0; QImage m_referenceImage; QPointF m_referencePosition; QVector<QImage> m_undo,m_redo;
 };

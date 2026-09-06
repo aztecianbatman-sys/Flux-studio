@@ -3,7 +3,9 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QPainter>
 #include <QStandardPaths>
+#include <QStringConverter>
 #include <QTextStream>
 
 bool FluxExportEngine::exportImage(const QImage&image,const QString&path,const FluxRenderSettings&settings,QString*error){if(image.isNull()){if(error)*error="Empty render";return false;}QImage out=image;if(settings.width>0&&settings.height>0&&(out.width()!=settings.width||out.height()!=settings.height))out=out.scaled(settings.width,settings.height,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);if(!settings.transparent)out=out.convertToFormat(QImage::Format_RGB32);if(!out.save(path)){if(error)*error=QStringLiteral("Could not save %1").arg(path);return false;}return true;}

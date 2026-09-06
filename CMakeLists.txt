@@ -27,6 +27,8 @@ qt_add_executable(FluxStudio
     src/brusheditor.h
     src/fluxselection.cpp
     src/fluxselection.h
+    src/fluxlayertree.cpp
+    src/fluxlayertree.h
     src/fluxwheel.cpp
     src/fluxwheel.h
     resources.qrc

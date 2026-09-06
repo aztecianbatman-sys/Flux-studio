@@ -11,6 +11,9 @@ qt_add_executable(FluxStudio
     src/mainwindow.cpp
     src/mainwindow.h
     src/mainwindow_extra.cpp
+    src/fluxstudio_nextwindow.cpp
+    src/fluxstudio_nextwindow.h
+    src/fluxstudio_nextwindow_panels.cpp
     src/canvaswidget.cpp
     src/canvaswidget.h
     src/fluxcanvasengine.cpp

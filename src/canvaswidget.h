@@ -1,4 +1,5 @@
 #pragma once
+#include "fluxbrush.h"
 #include <QColor>
 #include <QImage>
 #include <QPointF>
@@ -6,7 +7,7 @@
 #include <QOpenGLWidget>
 
 class QMouseEvent; class QWheelEvent; class QTabletEvent; class QResizeEvent; class QPainter;
-class FluxDocument; class FluxCanvasEngine; class FluxSelectionEngine; class FluxTransform; class BrushEngine;
+class FluxDocument; class FluxCanvasEngine; class FluxSelectionEngine; class FluxTransform;
 
 class FluxCanvas final : public QOpenGLWidget {
     Q_OBJECT

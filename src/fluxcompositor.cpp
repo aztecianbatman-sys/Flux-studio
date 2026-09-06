@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QtMath>
 #include <algorithm>
+#include <cmath>
 #include <functional>
 
 namespace {
@@ -17,7 +18,6 @@ void FluxCompositor::removeNode(int id){m_nodes.erase(std::remove_if(m_nodes.beg
 void FluxCompositor::connectNodes(int from,int to){if(auto*n=node(to);n&&from!=to&&!n->inputs.contains(from))n->inputs.push_back(from);}
 void FluxCompositor::disconnectNodes(int from,int to){if(auto*n=node(to))n->inputs.removeAll(from);}
 FluxCompNode*FluxCompositor::node(int id){for(auto&n:m_nodes)if(n.id==id)return &n;return nullptr;}
-
 QImage FluxCompositor::applyNode(const FluxCompNode&n,const QImage&input)const{
     QImage out=input;
     if(n.type=="BLUR")return blurImage(input,qBound(0,n.params.value("radius",6).toInt(),96));
@@ -25,8 +25,7 @@ QImage FluxCompositor::applyNode(const FluxCompNode&n,const QImage&input)const{
     if(n.type=="COLOR"||n.type=="ADJUSTMENT")return applyColor(out,n.params.value("brightness",0).toDouble(),n.params.value("contrast",1).toDouble(),n.params.value("saturation",1).toDouble());
     if(n.type=="LEVELS"){const qreal black=qBound(0.0,n.params.value("black",0).toDouble(),1.0);const qreal white=qBound(black+0.0001,n.params.value("white",1).toDouble(),1.0);const qreal gamma=qBound(0.05,n.params.value("gamma",1).toDouble(),8.0);out=out.convertToFormat(QImage::Format_ARGB32_Premultiplied);for(int y=0;y<out.height();++y){auto*row=reinterpret_cast<QRgb*>(out.scanLine(y));for(int x=0;x<out.width();++x){QColor c=QColor::fromRgba(row[x]);auto map=[&](int v){qreal z=v/255.0;z=qBound(0.0,(z-black)/(white-black),1.0);z=qPow(z,1.0/gamma);return qBound(0,int(z*255.0+0.5),255);};row[x]=QColor(map(c.red()),map(c.green()),map(c.blue()),c.alpha()).rgba();}}return out;}
     if(n.type=="HUE_SATURATION"){const qreal hueOffset=n.params.value("hue",0).toDouble();const qreal satMul=n.params.value("saturation",1).toDouble();const qreal light=n.params.value("lightness",0).toDouble();out=out.convertToFormat(QImage::Format_ARGB32_Premultiplied);for(int y=0;y<out.height();++y){auto*row=reinterpret_cast<QRgb*>(out.scanLine(y));for(int x=0;x<out.width();++x){QColor c=QColor::fromRgba(row[x]);float h=0,s=0,l=0,a=0;c.getHslF(&h,&s,&l,&a);h=std::fmod(h+hueOffset/360.0f+1.0f,1.0f);s=static_cast<float>(qBound(0.0,static_cast<qreal>(s)*satMul,1.0));l=static_cast<float>(qBound(0.0,static_cast<qreal>(l)+light,1.0));c.setHslF(h,s,l,a);row[x]=c.rgba();}}return out;}
-    if(n.type=="SHADOW"){QImage soft=blurImage(input,qBound(1,n.params.value("radius",8).toInt(),64));QColor color=n.params.value("color",QString("#000000")).value<QColor>();if(!color.isValid())color=Qt::black;QPainter p(&out);p.setOpacity(qBound(0.0,n.params.value("opacity",0.4).toDouble(),1.0));p.drawImage(n.params.value("x",5).toInt(),n.params.value("y",5).toInt(),soft);p.setOpacity(1);p.drawImage(0,0,input);p.end();return out;}
-    if(n.type=="BLEND"){return out;}
+    if(n.type=="SHADOW"){QImage soft=blurImage(input,qBound(1,n.params.value("radius",8).toInt(),64));QPainter p(&out);p.setOpacity(qBound(0.0,n.params.value("opacity",0.4).toDouble(),1.0));p.drawImage(n.params.value("x",5).toInt(),n.params.value("y",5).toInt(),soft);p.setOpacity(1);p.drawImage(0,0,input);p.end();return out;}
     if(n.type=="TRANSFORM"){QTransform t;t.translate(n.params.value("x",0).toDouble(),n.params.value("y",0).toDouble());t.rotate(n.params.value("rotation",0).toDouble());t.scale(n.params.value("scaleX",1).toDouble(),n.params.value("scaleY",1).toDouble());return input.transformed(t,Qt::SmoothTransformation);}
     return out;
 }

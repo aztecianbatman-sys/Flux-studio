@@ -10,6 +10,7 @@
 #include <QActionGroup>
 #include <QColorDialog>
 #include <QComboBox>
+#include <QDir>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -94,7 +95,7 @@ void FluxMainWindow::newProject(){m_document->create("Untitled",1920,1080);m_fil
 void FluxMainWindow::openProject(){const QString f=QFileDialog::getOpenFileName(this,"Open Flux Project",{},"Flux Project (*.flux)");if(f.isEmpty())return;QString err;if(!m_document->load(f,&err)){QMessageBox::critical(this,"Flux Studio",err);return;}m_filePath=f;m_canvas->setDocument(m_document);refreshLayers();setWindowTitle("Flux Studio — "+QFileInfo(f).completeBaseName());setStatus("✓ Opened");}
 void FluxMainWindow::saveProject(){if(m_filePath.isEmpty()){saveProjectAs();return;}QString err;if(!m_document->save(m_filePath,&err))QMessageBox::critical(this,"Save failed",err);else setStatus("✓ Saved");}
 void FluxMainWindow::saveProjectAs(){QString f=QFileDialog::getSaveFileName(this,"Save Flux Project",{},"Flux Project (*.flux)");if(f.isEmpty())return;if(!f.endsWith(".flux",Qt::CaseInsensitive))f+=".flux";m_filePath=f;saveProject();}
-void FluxMainWindow::exportImage(){const QString f=QFileDialog::getSaveFileName(this,"Export Image",{},"PNG (*.png);;JPEG (*.jpg *.jpeg);;WebP (*.webp);;SVG (*.svg)");if(f.isEmpty())return;QString err;if(!m_document->exportImage(f,&err))QMessageBox::critical(this,"Export failed",err);else setStatus("✓ Exported");}
+void FluxMainWindow::exportImage(){const QString f=QFileDialog::getSaveFileName(this,"Export Image",{},"PNG (*.png);;JPEG (*.jpg *.jpeg);;WebP (*.webp)");if(f.isEmpty())return;QString err;if(!m_document->exportImage(f,&err))QMessageBox::critical(this,"Export failed",err);else setStatus("✓ Exported");}
 void FluxMainWindow::autosave(){if(!m_document||m_autosavePath.isEmpty())return;QDir().mkpath(QFileInfo(m_autosavePath).absolutePath());m_document->save(m_autosavePath,nullptr);}
 void FluxMainWindow::restoreLastSession(){QSettings s("Flux","Flux Studio");restoreGeometry(s.value("geometry").toByteArray());restoreState(s.value("state").toByteArray());refreshLayers();}
 void FluxMainWindow::markModified(){setWindowTitle(QString("Flux Studio — %1*").arg(m_filePath.isEmpty()?QStringLiteral("Untitled"):QFileInfo(m_filePath).completeBaseName()));setStatus("● Unsaved");}

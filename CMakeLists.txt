@@ -55,6 +55,8 @@ qt_add_executable(FluxStudio
     src/fluxtabletprofiles.h
     src/fluxperformance.cpp
     src/fluxperformance.h
+    src/fluxworkflow.cpp
+    src/fluxworkflow.h
     resources.qrc
 )
 

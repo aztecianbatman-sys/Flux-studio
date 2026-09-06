@@ -2,6 +2,7 @@
 #include <QImage>
 #include <QProcess>
 #include <QString>
+#include <QStringList>
 #include <QVector>
 #include <functional>
 

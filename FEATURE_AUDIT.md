@@ -1,6 +1,25 @@
 # Flux Studio — Feature Audit
 
-This is the authoritative implementation checklist for the product. Features are split into working foundations, current production shell, and remaining engineering work. A feature is not considered complete merely because a button exists; it must operate on the document, survive save/load where appropriate, and work in the packaged build.
+This is the authoritative implementation checklist for the product. Features are split into implemented foundations, production subsystems, and remaining engineering work. A feature is not considered complete merely because a button exists; it must operate correctly, survive save/load where appropriate, and work in the packaged build.
+
+## 0.9 production additions
+
+- Persistent application preferences store
+- Shortcut registry with conflict detection
+- UI density, accessibility, contrast, color-assist and canvas-workflow preference model
+- Clipboard image interchange with transparent RGBA preservation
+- Flux layer clipboard payload format
+- Color-management validation primitives
+- sRGB / Display P3 / Rec.709 / Linear sRGB profiles in export model
+- Full/Limited range model
+- Linear-workflow and premultiplied-alpha export flags
+- Deterministic export metadata model
+- Editable cubic vector path geometry
+- Vector node/tangent model suitable for advanced path editing
+- Interactive render queue dock with job add/remove/reorder controls
+- Queue cancellation and frame-progress reporting
+- Windows runtime deployment verification for required Qt DLLs
+- Windows 0.9.0 packaging pipeline
 
 ## Working foundations already present
 
@@ -131,35 +150,23 @@ This is the authoritative implementation checklist for the product. Features are
 - Dark professional theme
 - High-DPI-friendly minimum workspace size
 
-## Current production-shell additions
-
-- Production Center with Project / Animation / Media / Export / Performance / Input / Workspace tabs
-- Single-file package import/export path
-- Recovery snapshot inspection entry
-- Media import/inspection UI
-- Render settings UI
-- Proxy/cache/background-render preference controls
-- Live process-memory diagnostics
-- Quick Wheel radius persistence
-- Saved tablet-profile browser
-- Windows Ink preference storage
-- Workspace preset storage
-- Windows x64 CI build + NSIS packaging
-
-## Remaining engineering work — do not mark these complete yet
+## Production engineering backlog
 
 ### 1. Rendering/performance
 - True dirty-region renderer
-- True tile cache invalidation by changed regions rather than whole document
+- Dirty-region tile invalidation
 - Worker-thread tile rendering
 - Render cancellation and prioritization
-- GPU paint/composite path instead of CPU composition for every frame
+- GPU paint/composite path
 - Persistent GPU texture cache
-- Proxy-resolution mode actually changing render resolution
+- Proxy-resolution mode affecting actual render resolution
 - Real live FPS measurement
 - Real frame-time measurement
 - Accurate cache-memory accounting
 - Memory-pressure policy and configurable limits
+- Background render workers
+- Render task scheduler
+- Render telemetry capture
 
 ### 2. Canvas quality/navigation
 - Zoom centered around cursor
@@ -171,12 +178,17 @@ This is the authoritative implementation checklist for the product. Features are
 - Editable perspective-grid handles
 - Ruler units and measurement overlays
 - Multiple reference images with transforms, opacity and locking
+- Navigator/minimap
+- Safe-area/action-area overlays
+- Camera framing guides
+- Custom canvas color
 
 ### 3. Drawing/tool completeness
 - Production line tool
 - Rectangle tool
 - Ellipse tool
 - Polygon tool
+- Star/polystar tool
 - Bezier/path tool
 - Gradient tool
 - Bucket/flood fill
@@ -188,6 +200,11 @@ This is the authoritative implementation checklist for the product. Features are
 - Multi-layer transform behavior
 - Shape snapping
 - Advanced vector layer/path editing
+- Shape boolean operations
+- Stroke expansion
+- Pathfinder-style combine modes
+- Perspective-aware drawing assist
+- Symmetry presets beyond horizontal/vertical
 
 ### 4. Brush system
 - Brush-library browser with thumbnails
@@ -200,6 +217,11 @@ This is the authoritative implementation checklist for the product. Features are
 - Brush dynamics curve editors
 - Per-device pressure curves in the UI
 - Brush preset persistence inside `.flux` package
+- Brush groups and nested tags
+- Import of common brush interchange formats where licensing permits
+- Wet-mix/color-smear brush behavior
+- Dual-brush engine
+- Stamp rotation by path direction
 
 ### 5. Layer system
 - True multi-selection operations
@@ -215,6 +237,11 @@ This is the authoritative implementation checklist for the product. Features are
 - Editable vector masks
 - Mask painting UI
 - Mask feather/expand/contract controls
+- Layer color labels with presets
+- Clipping-chain visualization
+- Reference/guide layers
+- Filter masks
+- Layer search/filter
 
 ### 6. Animation system
 - Animation properties bound to actual document/layer properties
@@ -234,6 +261,11 @@ This is the authoritative implementation checklist for the product. Features are
 - Multi-property tracks
 - Animation clipboard
 - Consistent playback vs final render evaluation
+- Nested compositions
+- Animation presets
+- Cycle/repeat expressions
+- Time warp/remap
+- Keyframe scaling/stretching
 
 ### 7. Timeline/media editing
 - Audio clips placed directly on timeline
@@ -246,6 +278,12 @@ This is the authoritative implementation checklist for the product. Features are
 - Media cache
 - Timeline snapping
 - Audio sync and frame-accurate scrubbing
+- Ripple edits
+- Slip/slide edits
+- Track enable/mute/solo/lock
+- Clip markers
+- Timeline zoom and navigator
+- Multiple scene timelines
 
 ### 8. Compositor
 - Real node canvas using graphics scene/view
@@ -269,6 +307,13 @@ This is the authoritative implementation checklist for the product. Features are
 - Blend/merge node
 - Transform node with full 2D controls
 - Color-space-aware processing
+- Track matte nodes
+- Morphology nodes
+- Convolution/sharpen nodes
+- LUT node
+- Noise/grain node
+- Distortion/displacement nodes
+- Vector-to-raster and raster-to-vector bridges
 
 ### 9. Render queue
 - Queue dock
@@ -283,6 +328,12 @@ This is the authoritative implementation checklist for the product. Features are
 - Render logs
 - Completion notifications
 - Queue persistence
+- Concurrent render slots
+- Priority scheduling
+- Failure retry policy
+- Estimated time remaining
+- Disk-space preflight
+- Output collision policy
 
 ### 10. Export/color management
 - Full frame range UI
@@ -297,6 +348,13 @@ This is the authoritative implementation checklist for the product. Features are
 - Export validation
 - Render preview
 - True editable SVG/vector export
+- EXR export
+- TIFF export
+- APNG export
+- ProRes/other codec profiles where FFmpeg supports them
+- Alpha-capable video presets
+- Safe color conversion pipeline
+- Embedded profile metadata
 
 ### 11. Project format
 - Embed images/audio/video/brushes/previews directly in one package
@@ -309,6 +367,11 @@ This is the authoritative implementation checklist for the product. Features are
 - Project thumbnails/previews
 - Project browser with thumbnail grid
 - Non-blocking save worker
+- Package compression options
+- Asset deduplication
+- Transaction journal
+- Autosave generations
+- Portable relative-path repair
 
 ### 12. Recovery
 - Automatic startup recovery detection
@@ -319,6 +382,9 @@ This is the authoritative implementation checklist for the product. Features are
 - Background snapshot thread
 - Snapshot deduplication
 - Automatic cleanup/retention policy
+- Recovery health indicator
+- Recovery checksum validation
+- Last-known-good document fallback
 
 ### 13. Workspace/preferences
 - Real workspace geometry/state serialization
@@ -331,6 +397,11 @@ This is the authoritative implementation checklist for the product. Features are
 - Accessibility sizing
 - Color-blind-friendly UI options
 - Preferences dialog
+- Per-workspace shortcut maps
+- Startup behavior settings
+- Autosave settings panel
+- Performance budget settings
+- Reset individual preference groups
 
 ### 14. Input/tablets
 - Live device discovery UI
@@ -342,6 +413,10 @@ This is the authoritative implementation checklist for the product. Features are
 - Windows Ink native behavior integration
 - Wacom native SDK integration where licensed/available
 - Platform-specific Apple Pencil integration for supported ports
+- Multi-tablet profile switching
+- Stylus button visualizer
+- Pressure test panel
+- Raw-vs-processed pressure preview
 
 ### 15. Commands/help
 - Register every UI action with Command Palette
@@ -351,6 +426,10 @@ This is the authoritative implementation checklist for the product. Features are
 - Context-sensitive help
 - Complete Help/About system
 - User documentation
+- First-run onboarding
+- Keyboard shortcut cheat sheet
+- Tooltips with shortcut hints
+- Diagnostic report generator
 
 ### 16. Clipboard/import
 - Copy/paste selected pixels
@@ -359,8 +438,37 @@ This is the authoritative implementation checklist for the product. Features are
 - Drag/drop image import
 - Drag/drop project import
 - External application paste compatibility
+- Multi-format clipboard targets
+- Clipboard history
+- Pasted-layer naming rules
+- Import scaling policy
+- Image orientation metadata handling
 
-### 17. Testing/quality
+### 17. Assets/library
+- Project asset browser
+- Imported media deduplication
+- Asset relinking
+- Missing-asset report
+- Search/filter assets
+- Thumbnail generation
+- Asset usage audit
+- Brush/texture/material library manager
+- Reference board
+- Palette library
+
+### 18. Color/palette
+- Color wheel
+- Sliders/HSB/HSL/OKLCH controls
+- Palette extraction from image
+- Palette library
+- Swatch naming
+- Recent colors
+- Harmony generation
+- Color history
+- On-canvas color picker
+- Gamut warning display
+
+### 19. Testing/quality
 - Unit tests for document serialization
 - Unit tests for layer compositing
 - Unit tests for animation evaluation
@@ -373,12 +481,54 @@ This is the authoritative implementation checklist for the product. Features are
 - Crash/startup smoke test
 - Performance regression benchmark
 - Large-document stress tests
+- Fuzz tests for project/package parsing
+- Corrupt asset tests
+- Memory leak checks
+- UI interaction smoke tests
 
-### 18. Cross-platform release
+### 20. Cross-platform release
 - Linux build/package pipeline
 - macOS build/package pipeline
 - Platform-specific installer/signing workflows
 - Runtime dependency validation on each platform
+- Native file associations
+- Native drag/drop behavior
+- Native high-DPI behavior
+- Wayland/X11 validation
+- macOS sandbox/signing/notarization path
+
+### 21. Professional workflow extras
+- Fullscreen canvas mode
+- Presentation mode
+- Reference-only viewing mode
+- Before/after comparison
+- Split-view comparison
+- A/B render preview
+- Safe-mode startup
+- Diagnostic mode
+- Crash reporter with local logs
+- Project statistics
+- Document size estimator
+- Undo history viewer
+- Action history journal
+- Batch processing
+- Command-line render mode
+- Headless rendering
+- Scriptable automation hooks
+- Plugin API foundation
+- Extension manager
+- Localization framework
+
+### 22. Future Flux ecosystem
+- Shared Flux Core API
+- Flux Draw product target
+- Flux Animate product target
+- Bundled Flux Studio product target
+- Common brush/document/project formats
+- Cross-product preset portability
+- Plugin SDK
+- Developer console
+- Extension sandboxing
 
 ## Definition of feature-complete
 

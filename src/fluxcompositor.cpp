@@ -1,8 +1,10 @@
 #include "fluxcompositor.h"
 #include <QColor>
+#include <QJsonArray>
 #include <QPainter>
 #include <QtMath>
 #include <algorithm>
+#include <functional>
 
 FluxCompositor::FluxCompositor(){const int image=addNode("IMAGE","Image");const int color=addNode("COLOR","Color");const int blur=addNode("BLUR","Blur");const int glow=addNode("GLOW","Glow");const int transform=addNode("TRANSFORM","Transform");const int output=addNode("OUTPUT","Output");connectNodes(image,color);connectNodes(color,blur);connectNodes(blur,glow);connectNodes(glow,transform);connectNodes(transform,output);}
 int FluxCompositor::addNode(const QString&type,const QString&name){FluxCompNode n;n.id=m_nextId++;n.type=type;n.name=name;m_nodes.push_back(n);return n.id;}

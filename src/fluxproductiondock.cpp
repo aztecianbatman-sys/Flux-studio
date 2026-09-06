@@ -25,6 +25,7 @@
 #include <QSlider>
 #include <QSpinBox>
 #include <QTabWidget>
+#include <QTimer>
 #include <QVBoxLayout>
 
 namespace { QLabel* text(const QString&s){auto*l=new QLabel(s);l->setWordWrap(true);return l;} QPushButton* action(const QString&s){auto*b=new QPushButton(s);b->setMinimumHeight(34);return b;} }

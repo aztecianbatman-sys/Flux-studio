@@ -21,7 +21,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          python -m pip install --upgrade pip aqtinstall
+          python -m pip install --upgrade pip
+          python -m pip install aqtinstall==3.3.0 py7zr==1.1.0
           python -m aqt install-qt windows desktop 6.8.3 win64_msvc2022_64 --outputdir "$env:RUNNER_TEMP\Qt"
 
       - name: Configure

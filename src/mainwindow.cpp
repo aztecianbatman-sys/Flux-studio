@@ -26,13 +26,11 @@
 #include <QFormLayout>
 #include <QGridLayout>
 #include <QGroupBox>
-#include <QHBoxLayout>
 #include <QHash>
 #include <QHeaderView>
 #include <QIcon>
 #include <QLabel>
 #include <QListWidget>
-#include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPixmap>
@@ -45,14 +43,11 @@
 #include <QStatusBar>
 #include <QTimer>
 #include <QToolBar>
-#include <QToolButton>
 #include <QTreeWidget>
 #include <QVBoxLayout>
 #include <functional>
 
-namespace {
-QLabel* label(const QString& text,const QString& role=QString(),QWidget* parent=nullptr){auto*l=new QLabel(text,parent);if(!role.isEmpty())l->setProperty("role",role);l->setWordWrap(true);return l;}
-}
+namespace { QLabel* label(const QString& text,const QString& role=QString(),QWidget* parent=nullptr){auto*l=new QLabel(text,parent);if(!role.isEmpty())l->setProperty("role",role);l->setWordWrap(true);return l;} }
 
 FluxMainWindow::FluxMainWindow(QWidget* parent):QMainWindow(parent),m_document(new FluxDocument),m_playTimer(new QTimer(this)){
     setWindowTitle("Flux Studio — Home");resize(1680,1040);setMinimumSize(1180,760);setDockNestingEnabled(true);
@@ -86,4 +81,14 @@ QWidget* FluxMainWindow::makeInspectorPanel(){auto*root=new QWidget;auto*lay=new
 
 QWidget* FluxMainWindow::makeTimelinePanel(){auto*root=new QWidget;auto*lay=new QVBoxLayout(root);lay->setContentsMargins(10,8,10,8);auto*head=new QHBoxLayout;head->addWidget(label("TIMELINE","panelTitle"));head->addSpacing(18);head->addWidget(label("FPS"));m_fps=new QSpinBox;m_fps->setRange(1,240);m_fps->setValue(24);head->addWidget(m_fps);auto*play=new QPushButton("▶");play->setCheckable(true);head->addWidget(play);auto*frameLabel=new QLabel("Frame 1 / 120");head->addWidget(frameLabel);head->addStretch();head->addWidget(new QLabel("Dope sheet  •  Graph ready"));lay->addLayout(head);auto*timeline=new FluxTimelineWidget(m_document,root);connect(play,&QPushButton::toggled,this,[this,play](bool on){m_playing=on;if(on)m_playTimer->start();else m_playTimer->stop();play->setText(on?"■":"▶");});connect(m_fps,qOverload<int>(&QSpinBox::valueChanged),this,[this](int v){m_playTimer->setInterval(qMax(1,1000/v));});connect(timeline,&FluxTimelineWidget::frameChanged,this,[this,frameLabel](int f){m_document->setFrame(f);frameLabel->setText(QString("Frame %1 / %2").arg(f+1).arg(m_document->frameCount()));m_canvas->update();});connect(timeline,&FluxTimelineWidget::documentEdited,this,[this]{markModified();});lay->addWidget(timeline,1);return root;}
 
-void FluxMainWindow::setStatus(const QString&text){if(m_statusLabel)m_statusLabel->setText(text);statusBar()->showMessage(text,2500);}void FluxMainWindow::updateZoomLabel(double z){if(m_zoomLabel)m_zoomLabel->setText(QString::number(qRound(z*100))+"%");}void FluxMainWindow::showCommandPalette(){FluxCommandPalette dlg(this);QVector<FluxCommand>cmds={{"new","New Project","Ctrl+N",[this]{newProject();}},{"open","Open Project","Ctrl+O",[this]{openProject();}},{"save","Save Project","Ctrl+S",[this]{saveProject();}},{"brush","Brush Editor","",[this]{openBrushEditor();}},{"fit","Fit Canvas","",[this]{fitCanvas();}},{"home","Home","Ctrl+Shift+H",[this]{returnHome();}},{"undo","Undo","Ctrl+Z",[this]{undo();}},{"redo","Redo","Ctrl+Y",[this]{redo();}},{"onion","Toggle Onion Skin","",[this]{toggleOnionSkin();}}};dlg.setCommands(cmds);dlg.exec();}
+void FluxMainWindow::newProject(){QDialog dlg(this);dlg.setWindowTitle("New Flux Project");auto*lay=new QVBoxLayout(&dlg);lay->addWidget(label("NEW PROJECT","dialogEyebrow"));lay->addWidget(label("Set up the document before entering the workspace.","dialogTitle"));auto*form=new QFormLayout;auto*preset=new QComboBox;preset->addItems({"1920 × 1080  /  24 fps","2048 × 2048  / 24 fps","1280 × 720  / 30 fps","1080 × 1920  / 30 fps","Custom"});auto*w=new QSpinBox;w->setRange(1,16384);w->setValue(1920);auto*h=new QSpinBox;h->setRange(1,16384);h->setValue(1080);auto*fps=new QSpinBox;fps->setRange(1,240);fps->setValue(24);form->addRow("Preset",preset);form->addRow("Width",w);form->addRow("Height",h);form->addRow("FPS",fps);lay->addLayout(form);auto*buttons=new QDialogButtonBox(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);lay->addWidget(buttons);connect(preset,qOverload<int>(&QComboBox::currentIndexChanged),[=](int i){if(i==0){w->setValue(1920);h->setValue(1080);fps->setValue(24);}else if(i==1){w->setValue(2048);h->setValue(2048);fps->setValue(24);}else if(i==2){w->setValue(1280);h->setValue(720);fps->setValue(30);}else if(i==3){w->setValue(1080);h->setValue(1920);fps->setValue(30);}const bool custom=i==4;w->setEnabled(custom);h->setEnabled(custom);fps->setEnabled(custom);});connect(buttons,&QDialogButtonBox::accepted,&dlg,&QDialog::accept);connect(buttons,&QDialogButtonBox::rejected,&dlg,&QDialog::reject);if(dlg.exec()!=QDialog::Accepted)return;m_document->create("Untitled",w->value(),h->value());m_filePath.clear();m_fps->setValue(fps->value());enterWorkspace();setStatus(QString("New %1 × %2 project").arg(w->value()).arg(h->value()));}
+void FluxMainWindow::openProject(){const auto f=QFileDialog::getOpenFileName(this,"Open Flux Project",{},"Flux Project (*.flux)");if(!f.isEmpty())loadProjectPath(f);}void FluxMainWindow::loadProjectPath(const QString&path){QString e;if(!m_document->load(path,&e)){QMessageBox::critical(this,"Flux Studio",e);return;}m_filePath=path;rememberRecent(path);m_canvas->setDocument(m_document);refreshLayers();enterWorkspace();setWindowTitle("Flux Studio — "+QFileInfo(path).completeBaseName());setStatus("Opened "+QFileInfo(path).completeBaseName());}void FluxMainWindow::saveProject(){if(m_filePath.isEmpty()){saveProjectAs();return;}QString e;if(!m_document->save(m_filePath,&e)){QMessageBox::critical(this,"Save failed",e);return;}rememberRecent(m_filePath);setWindowTitle("Flux Studio — "+QFileInfo(m_filePath).completeBaseName());setStatus("Saved");}void FluxMainWindow::saveProjectAs(){auto f=QFileDialog::getSaveFileName(this,"Save Flux Project",{},"Flux Project (*.flux)");if(f.isEmpty())return;if(!f.endsWith(".flux",Qt::CaseInsensitive))f+=".flux";m_filePath=f;saveProject();}
+void FluxMainWindow::exportImage(){const auto f=QFileDialog::getSaveFileName(this,"Export Image",{},"PNG (*.png);;JPEG (*.jpg *.jpeg);;WebP (*.webp);;SVG (*.svg)");if(f.isEmpty())return;QString e;bool ok=false;if(f.endsWith(".svg",Qt::CaseInsensitive))ok=FluxExportEngine::exportSvgRaster(m_document->composite(),f,FluxRenderSettings{},&e);else ok=m_document->exportImage(f,&e);if(!ok)QMessageBox::critical(this,"Export failed",e);else setStatus("Exported "+QFileInfo(f).fileName());}
+
+void FluxMainWindow::enterWorkspace(){m_stack->setCurrentWidget(m_canvas);if(m_topBar)m_topBar->show();if(m_toolRail)m_toolRail->show();for(auto*d:findChildren<QDockWidget*>())d->show();m_canvas->setFocus();m_canvas->fitCanvas();refreshLayers();}
+void FluxMainWindow::returnHome(){m_playing=false;m_playTimer->stop();m_stack->setCurrentWidget(m_home);if(m_topBar)m_topBar->hide();if(m_toolRail)m_toolRail->hide();for(auto*d:findChildren<QDockWidget*>())d->hide();setWindowTitle(m_filePath.isEmpty()?"Flux Studio — Home":"Flux Studio — "+QFileInfo(m_filePath).completeBaseName());}
+void FluxMainWindow::rememberRecent(const QString&path){FluxWorkflow::addRecentProject(path,12);}void FluxMainWindow::updateHomeRecent(){}void FluxMainWindow::openRecentProject(){if(auto*i=qobject_cast<QListWidgetItem*>(sender()))loadProjectPath(i->data(Qt::UserRole).toString());}
+void FluxMainWindow::autosave(){if(!m_document||m_autosavePath.isEmpty())return;QDir().mkpath(QFileInfo(m_autosavePath).absolutePath());m_document->save(m_autosavePath,nullptr);}void FluxMainWindow::restoreLastSession(){QSettings s("Flux","Flux Studio");restoreGeometry(s.value("geometry").toByteArray());restoreState(s.value("state").toByteArray());}
+void FluxMainWindow::markModified(){if(m_filePath.isEmpty())setWindowTitle("Flux Studio — Untitled *");else setWindowTitle("Flux Studio — "+QFileInfo(m_filePath).completeBaseName()+" *");setStatus("Unsaved changes");}void FluxMainWindow::setStatus(const QString&text){if(m_statusLabel)m_statusLabel->setText(text);statusBar()->showMessage(text,2500);}
+void FluxMainWindow::updateZoomLabel(double z){if(m_zoomLabel)m_zoomLabel->setText(QString::number(qRound(z*100))+"%");}void FluxMainWindow::showCommandPalette(){FluxCommandPalette dlg(this);QVector<FluxCommand>cmds={{"new","New Project","Ctrl+N",[this]{newProject();}},{"open","Open Project","Ctrl+O",[this]{openProject();}},{"save","Save Project","Ctrl+S",[this]{saveProject();}},{"brush","Brush Editor","",[this]{openBrushEditor();}},{"fit","Fit Canvas","",[this]{fitCanvas();}},{"home","Home","Ctrl+Shift+H",[this]{returnHome();}},{"undo","Undo","Ctrl+Z",[this]{undo();}},{"redo","Redo","Ctrl+Y",[this]{redo();}},{"onion","Toggle Onion Skin","",[this]{toggleOnionSkin();}},{"reference","Load Reference","",[this]{const auto f=QFileDialog::getOpenFileName(this,"Reference",{},"Images (*.png *.jpg *.jpeg *.webp)");if(!f.isEmpty())m_canvas->loadReference(f);}}};dlg.setCommands(cmds);dlg.exec();}
+void FluxMainWindow::refreshTimeline(){}

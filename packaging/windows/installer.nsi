@@ -23,8 +23,6 @@ VIAddVersionKey "FileVersion" "${APP_VERSION}"
 VIAddVersionKey "ProductVersion" "${APP_VERSION}"
 
 !define MUI_ABORTWARNING
-!define MUI_ICON "${PROJECT_ROOT}\assets\flux-logo.ico"
-!define MUI_UNICON "${PROJECT_ROOT}\assets\flux-logo.ico"
 !define MUI_WELCOMEPAGE_TITLE "Welcome to Flux Studio"
 !define MUI_WELCOMEPAGE_TEXT "Install Flux Studio ${APP_VERSION}, a native professional drawing, animation and compositing workstation."
 !define MUI_FINISHPAGE_RUN "$INSTDIR\${APP_EXE}"
@@ -43,13 +41,12 @@ Section "Flux Studio" SEC_MAIN
   SectionIn RO
   SetOutPath "$INSTDIR"
   File /r "${PROJECT_ROOT}\dist\*"
-  File "${PROJECT_ROOT}\assets\flux-logo.ico"
 
   WriteUninstaller "$INSTDIR\Uninstall Flux Studio.exe"
   CreateDirectory "$SMPROGRAMS\Flux Studio"
-  CreateShortcut "$SMPROGRAMS\Flux Studio\Flux Studio.lnk" "$INSTDIR\${APP_EXE}" "$INSTDIR\flux-logo.ico"
+  CreateShortcut "$SMPROGRAMS\Flux Studio\Flux Studio.lnk" "$INSTDIR\${APP_EXE}"
   CreateShortcut "$SMPROGRAMS\Flux Studio\Uninstall Flux Studio.lnk" "$INSTDIR\Uninstall Flux Studio.exe"
-  CreateShortcut "$DESKTOP\Flux Studio.lnk" "$INSTDIR\${APP_EXE}" "$INSTDIR\flux-logo.ico"
+  CreateShortcut "$DESKTOP\Flux Studio.lnk" "$INSTDIR\${APP_EXE}"
 
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\FluxStudio" "DisplayName" "${APP_NAME}"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\FluxStudio" "DisplayVersion" "${APP_VERSION}"

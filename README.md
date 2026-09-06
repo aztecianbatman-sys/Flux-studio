@@ -1,5 +1,4 @@
 # Flux Studio
-
 Flux Studio is a native **C++ / Qt 6** professional 2D drawing, animation, and compositing workstation.
 
 > **DRAW → ANIMATE → COMPOSE → EXPORT**

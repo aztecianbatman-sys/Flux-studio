@@ -2,8 +2,9 @@
 #include <QImage>
 #include <QJsonObject>
 #include <QPointF>
-#include <QVector>
 #include <QString>
+#include <QVariantMap>
+#include <QVector>
 
 struct FluxEffect { QString type; QVariantMap params; bool enabled=true; };
 struct FluxCompNode { int id=0; QString name; QString type; QVector<int> inputs; QVariantMap params; };

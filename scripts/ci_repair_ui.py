@@ -1,53 +1,63 @@
 from pathlib import Path
-import re
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def patch(path: str, replacements: list[tuple[str, str]]) -> bool:
+def replace_once(path: str, old: str, new: str) -> bool:
     p = ROOT / path
     s = p.read_text(encoding="utf-8")
-    original = s
-    for old, new in replacements:
-        if old in s:
-            s = s.replace(old, new)
-    if s != original:
-        p.write_text(s, encoding="utf-8")
-        return True
-    return False
+    if old not in s:
+        return False
+    p.write_text(s.replace(old, new, 1), encoding="utf-8")
+    return True
+
 
 changed = False
 
-changed |= patch("src/mainwindow.cpp", [
-    ('#include "fluxcolorwheel.h"\n', '#include "fluxcolorwheel.h"\n#include "fluxadvancedsuite.h"\n'),
-    ('auto*cmd=m_topBar->addAction("⌘","Command Palette");connect(cmd,&QAction::triggered,this,&FluxMainWindow::showCommandPalette);',
-     'auto*cmd=m_topBar->addAction("⌘");cmd->setToolTip(QStringLiteral("Command Palette (Ctrl+K)"));connect(cmd,&QAction::triggered,this,&FluxMainWindow::showCommandPalette);'),
-    ('connect(brush,&QPushButton::clicked,this,&FluxMainWindow::openBrushEditor);',
-     'connect(brush,&QPushButton::clicked,this,[this]{enterWorkspace();openBrushEditor();});'),
-])
+changed |= replace_once(
+    "src/mainwindow.cpp",
+    '#include "fluxcolorwheel.h"\n',
+    '#include "fluxcolorwheel.h"\n#include "fluxadvancedsuite.h"\n',
+)
+changed |= replace_once(
+    "src/mainwindow.cpp",
+    'auto*cmd=m_topBar->addAction("⌘","Command Palette");connect(cmd,&QAction::triggered,this,&FluxMainWindow::showCommandPalette);',
+    'auto*cmd=m_topBar->addAction("⌘");cmd->setToolTip(QStringLiteral("Command Palette (Ctrl+K)"));connect(cmd,&QAction::triggered,this,&FluxMainWindow::showCommandPalette);',
+)
+changed |= replace_once(
+    "src/mainwindow.cpp",
+    'connect(brush,&QPushButton::clicked,this,&FluxMainWindow::openBrushEditor);',
+    'connect(brush,&QPushButton::clicked,this,[this]{enterWorkspace();openBrushEditor();});',
+)
 
-changed |= patch("src/fluxcolorwheel.cpp", [
-    ('const auto hsv=m_color.toHsvF();setColor(hsvColor(h,hsv.saturationF(),hsv.valueF()));',
-     'int hue=0,sat=0,val=255;m_color.getHsv(&hue,&sat,&val);setColor(hsvColor(h,sat/255.0,val/255.0));'),
-    ('const auto hsv=m_color.toHsvF();setColor(hsvColor(hsv.hueF()<0?0:hsv.hueF(),x,1-y));',
-     'int hue=0,sat=0,val=255;m_color.getHsv(&hue,&sat,&val);setColor(hsvColor(hue<0?0:hue/360.0,x,1-y));'),
-    ('const qreal h=m_color.toHsvF().hueF()<0?0:m_color.toHsvF().hueF(),angle=h*2*M_PI-M_PI/2;',
-     'int hue=0,sat=0,val=255;m_color.getHsv(&hue,&sat,&val);const qreal h=hue<0?0:hue/360.0,angle=h*2*M_PI-M_PI/2;'),
-])
+changed |= replace_once(
+    "src/fluxcolorwheel.cpp",
+    'const auto hsv=m_color.toHsvF();setColor(hsvColor(h,hsv.saturationF(),hsv.valueF()));',
+    'int hue=0,sat=0,val=255;m_color.getHsv(&hue,&sat,&val);setColor(hsvColor(h,sat/255.0,val/255.0));',
+)
+changed |= replace_once(
+    "src/fluxcolorwheel.cpp",
+    'const auto hsv=m_color.toHsvF();setColor(hsvColor(hsv.hueF()<0?0:hsv.hueF(),x,1-y));',
+    'int hue=0,sat=0,val=255;m_color.getHsv(&hue,&sat,&val);setColor(hsvColor(hue<0?0:hue/360.0,x,1-y));',
+)
+changed |= replace_once(
+    "src/fluxcolorwheel.cpp",
+    'const qreal h=m_color.toHsvF().hueF()<0?0:m_color.toHsvF().hueF(),angle=h*2*M_PI-M_PI/2;',
+    'int hue=0,sat=0,val=255;m_color.getHsv(&hue,&sat,&val);const qreal h=hue<0?0:hue/360.0,angle=h*2*M_PI-M_PI/2;',
+)
 
-changed |= patch("src/canvaswidget.h", [
-    ('m_selecting=false,m_onionSkin=true,m_grid=false', 'm_selecting=false,m_onionSkin=false,m_grid=false'),
-])
-
-# Make the artboard visually calmer: no forced checkerboard and no permanent HUD overlay.
-p = ROOT / "src/canvaswidget.cpp"
-s = p.read_text(encoding="utf-8")
-orig = s
-s = re.sub(r'const int cell=18;.*?\n', 'p.fillRect(r, QColor("#f4f5f7"));\n', s, count=1, flags=re.S)
-s = re.sub(r'p\.setPen\(QColor\("#8a919b"\)\);p\.setFont\(QFont\([^\n]+\)\);p\.drawText\([^\n]+\);', '', s, count=1)
-if s != orig:
-    p.write_text(s, encoding="utf-8")
-    changed = True
+# Normalize the canvas paint routine after the earlier accidental one-line replacement.
+canvas = ROOT / "src/canvaswidget.cpp"
+s = canvas.read_text(encoding="utf-8")
+needle = "void FluxCanvas::mousePressEvent(QMouseEvent*e){"
+if needle in s:
+    prefix, tail = s.split(needle, 1)
+    marker = "void FluxCanvas::paintEvent(QPaintEvent*){"
+    if marker in prefix:
+        before, _bad = prefix.split(marker, 1)
+        good = '''void FluxCanvas::paintEvent(QPaintEvent*){\n    QPainter p(this);\n    if(m_engine) p.setRenderHint(QPainter::Antialiasing,!m_engine->pixelPerfect());\n    p.fillRect(rect(),QColor("#20242a"));\n    if(!m_document||!m_engine)return;\n    const QRectF r=QRectF(canvasToWidget({0,0}),canvasToWidget({double(m_document->width()),double(m_document->height())})).normalized();\n    p.save();\n    p.setClipRect(r);\n    p.fillRect(r,QColor("#f4f5f7"));\n    drawReference(p,r);\n    if(m_onionSkin&&m_document->frame()>0)drawOnion(p,r,m_document->frame()-1,.20);\n    if(m_onionSkin&&m_document->frame()+1<m_document->frameCount())drawOnion(p,r,m_document->frame()+1,.13);\n    m_engine->draw(p,size());\n    p.restore();\n    p.setPen(QPen(QColor("#4a505c"),1));\n    p.drawRect(r);\n    drawGuides(p);\n    drawSelectionOverlay(p);\n    if(m_drawing&&isShapeTool()){\n        p.save();\n        p.setPen(QPen(QColor("#637083"),1,Qt::DashLine));\n        p.setBrush(Qt::NoBrush);\n        const QRectF wr=QRectF(canvasToWidget(m_toolStart),m_cursor).normalized();\n        if(m_tool=="Line")p.drawLine(canvasToWidget(m_toolStart),m_cursor);\n        else if(m_tool=="Rectangle")p.drawRect(wr);\n        else if(m_tool=="Ellipse")p.drawEllipse(wr);\n        else p.drawRect(wr);\n        p.restore();\n    }\n    if(m_selecting&&m_tool=="Lasso Select"&&m_lasso.size()>1){\n        p.save();\n        p.setPen(QPen(QColor("#6f7b8a"),1,Qt::DashLine));\n        for(int i=1;i<m_lasso.size();++i)p.drawLine(m_lasso[i-1],m_lasso[i]);\n        p.restore();\n    }\n    if(m_selecting&&m_tool=="Rectangle Select"){\n        p.save();\n        p.setPen(QPen(QColor("#6f7b8a"),1,Qt::DashLine));\n        p.setBrush(Qt::NoBrush);\n        p.drawRect(QRectF(m_selectionStart,m_cursor).normalized());\n        p.restore();\n    }\n}\n'''
+        canvas.write_text(before + good + needle + tail, encoding="utf-8")
+        changed = True
 
 if changed:
     print("Flux UI source repairs applied.")

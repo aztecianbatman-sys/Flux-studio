@@ -1,9 +1,10 @@
 #pragma once
 #include <QByteArray>
 #include <QImage>
+#include <QSize>
 #include <QString>
+#include <QStringList>
 #include <QVector>
-#include <functional>
 
 struct FluxAudioInfo { QString path; double duration=0; int sampleRate=48000; int channels=2; QVector<float> waveform; };
 struct FluxVideoInfo { QString path; double duration=0; int fps=24; int width=0; int height=0; int frames=0; };

@@ -10,3 +10,5 @@ The architecture is deliberately shared-core so future products can become **Flu
 Windows x64 installer packaging is built automatically through GitHub Actions. The current pipeline builds the Release application, deploys Qt, creates the NSIS installer, and publishes a portable ZIP.
 
 Build trigger refresh — 2026-09-06.
+
+Windows workflow re-registration — 2026-09-06.

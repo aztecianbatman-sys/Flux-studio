@@ -2,5 +2,11 @@
   <qresource prefix="/">
     <file alias="art/zhe.svg">../assets/zhe.svg</file>
     <file alias="branding/flux-logo.svg">../assets/flux-logo.svg</file>
+    <file alias="art/home-hero.svg">../assets/ui/home-hero.svg</file>
+    <file alias="art/color-wheel.svg">../assets/ui/color-wheel.svg</file>
+    <file alias="art/brushes.svg">../assets/ui/brushes.svg</file>
+    <file alias="art/layers.svg">../assets/ui/layers.svg</file>
+    <file alias="art/timeline.svg">../assets/ui/timeline.svg</file>
+    <file alias="art/compositor.svg">../assets/ui/compositor.svg</file>
   </qresource>
 </RCC>

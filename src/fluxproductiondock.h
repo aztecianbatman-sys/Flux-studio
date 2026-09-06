@@ -10,6 +10,7 @@ class QSpinBox;
 class QSlider;
 class FluxDocument;
 class FluxCanvas;
+class FluxRenderQueueWidget;
 
 class FluxProductionDock final : public QWidget {
     Q_OBJECT
@@ -46,4 +47,5 @@ private:
     QSpinBox* m_exportHeight{};
     QSlider* m_wheelRadius{};
     QTabWidget* m_tabs{};
+    FluxRenderQueueWidget* m_renderQueue{};
 };

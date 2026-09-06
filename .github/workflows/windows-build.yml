@@ -3,7 +3,7 @@ name: Flux Studio Windows Build
 on: [push, workflow_dispatch]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   package-windows:
@@ -25,13 +25,6 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           python scripts/ci_repair_ui.py
-          git config user.name 'Flux CI'
-          git config user.email 'actions@github.com'
-          git add src
-          if (-not (git diff --cached --quiet)) {
-            git commit -m 'Repair UI source compatibility and calm canvas defaults'
-            git push
-          }
 
       - name: Install Qt
         shell: pwsh

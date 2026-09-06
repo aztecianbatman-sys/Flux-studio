@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/">
     <file alias="art/zhe.svg">../assets/zhe.svg</file>
+    <file alias="branding/flux-logo.svg">../assets/flux-logo.svg</file>
   </qresource>
 </RCC>

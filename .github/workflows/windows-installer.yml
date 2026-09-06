@@ -42,17 +42,22 @@ jobs:
             throw "Flux Studio executable was not produced: $exe"
           }
           Copy-Item $exe 'dist\Flux Studio.exe'
-          $windeploy = Get-ChildItem -Path $env:Qt6_DIR -Filter windeployqt.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+
+          $windeploy = Get-Command windeployqt.exe -ErrorAction SilentlyContinue
           if (!$windeploy) {
-            $windeploy = Get-Command windeployqt.exe -ErrorAction SilentlyContinue
+            if ($env:Qt6_DIR) {
+              $windeploy = Get-ChildItem -Path $env:Qt6_DIR -Filter windeployqt.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+            }
           }
           if (!$windeploy) {
             throw 'windeployqt.exe could not be located.'
           }
-          & $windeploy.FullName --release --compiler-runtime --no-translations 'dist\Flux Studio.exe'
+
+          & $windeploy.Source --release --compiler-runtime --no-translations 'dist\Flux Studio.exe'
           if ($LASTEXITCODE -ne 0) {
             throw "windeployqt failed with exit code $LASTEXITCODE"
           }
+
           New-Item -ItemType Directory -Force -Path 'dist\runtime' | Out-Null
           Set-Content -Path 'dist\runtime\README.txt' -Value @'
 Flux Studio 0.6.0 — Windows x64

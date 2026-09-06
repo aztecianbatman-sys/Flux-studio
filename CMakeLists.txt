@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(FluxStudio VERSION 0.5.0 LANGUAGES CXX)
+project(FluxStudio VERSION 0.6.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -45,6 +45,16 @@ qt_add_executable(FluxStudio
     src/fluxexport.h
     src/fluxrenderqueue.cpp
     src/fluxrenderqueue.h
+    src/fluxprojectmanager.cpp
+    src/fluxprojectmanager.h
+    src/fluxrecovery.cpp
+    src/fluxrecovery.h
+    src/fluxcommandpalette.cpp
+    src/fluxcommandpalette.h
+    src/fluxtabletprofiles.cpp
+    src/fluxtabletprofiles.h
+    src/fluxperformance.cpp
+    src/fluxperformance.h
     resources.qrc
 )
 

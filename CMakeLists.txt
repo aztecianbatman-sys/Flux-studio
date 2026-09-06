@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(FluxStudio VERSION 0.8.0 LANGUAGES CXX)
+project(FluxStudio VERSION 0.9.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -44,6 +44,8 @@ qt_add_executable(FluxStudio
     src/fluxexport.h
     src/fluxrenderqueue.cpp
     src/fluxrenderqueue.h
+    src/fluxrenderqueuewidget.cpp
+    src/fluxrenderqueuewidget.h
     src/fluxprojectmanager.cpp
     src/fluxprojectmanager.h
     src/fluxrecovery.cpp
@@ -60,6 +62,14 @@ qt_add_executable(FluxStudio
     src/fluxprojectpackage.h
     src/fluxproductiondock.cpp
     src/fluxproductiondock.h
+    src/fluxpreferences.cpp
+    src/fluxpreferences.h
+    src/fluxclipboard.cpp
+    src/fluxclipboard.h
+    src/fluxcolormanagement.cpp
+    src/fluxcolormanagement.h
+    src/fluxvector.cpp
+    src/fluxvector.h
 )
 
 target_link_libraries(FluxStudio PRIVATE Qt6::Widgets Qt6::OpenGLWidgets Qt6::Svg)
@@ -77,3 +87,6 @@ set_target_properties(FluxStudio PROPERTIES
 )
 
 install(TARGETS FluxStudio BUNDLE DESTINATION . RUNTIME DESTINATION bin)
+
+enable_testing()
+add_test(NAME FluxStudio_SourceTreeSmoke COMMAND ${CMAKE_COMMAND} -E echo "Flux Studio source tree configured")

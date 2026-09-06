@@ -22,6 +22,7 @@
 #include "fluxadvancedsuite.h"
 #include "fluxadvancedsuite.h"
 #include "fluxadvancedsuite.h"
+#include "fluxadvancedsuite.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -132,14 +133,64 @@ void FluxMainWindow::buildToolRail(){
 }
 
 void FluxMainWindow::buildDocks(){
-    auto*studio=new QDockWidget("Studio Panels",this);studio->setObjectName("StudioDock");studio->setMinimumWidth(310);studio->setMaximumWidth(390);auto*tabs=new QTabWidget(studio);tabs->setDocumentMode(true);tabs->addTab(makeColorPanel(),"Color");tabs->addTab(makeBrushPanel(),"Brushes");tabs->addTab(makeLayersPanel(),"Layers");tabs->addTab(makeInspectorPanel(),"Tool Options");tabs->addTab(new FluxCompositorWidget,"Compose");m_production=new FluxProductionDock(m_document,m_canvas,studio);tabs->addTab(m_production,"Production");studio->setWidget(tabs);addDockWidget(Qt::RightDockWidgetArea,studio);
-    connect(m_production,&FluxProductionDock::requestNewProject,this,&FluxMainWindow::newProject);connect(m_production,&FluxProductionDock::requestOpenProject,this,&FluxMainWindow::openProject);connect(m_production,&FluxProductionDock::requestSaveProject,this,&FluxMainWindow::saveProject);
-    auto*timeline=new QDockWidget("Timeline",this);timeline->setObjectName("TimelineDock");timeline->setMinimumHeight(220);timeline->setWidget(makeTimelinePanel());addDockWidget(Qt::BottomDockWidgetArea,timeline);
-    auto*advanced=new QDockWidget("Advanced Production Suite",this);advanced->setObjectName("AdvancedSuiteDock");advanced->setWidget(new FluxAdvancedSuite(m_document,m_canvas,advanced));addDockWidget(Qt::LeftDockWidgetArea,advanced);advanced->hide();
-    studio->raise();
+    auto*colorDock=new QDockWidget(QStringLiteral("Advanced Color Selector"),this);
+    colorDock->setObjectName(QStringLiteral("ColorSelectorDock"));
+    colorDock->setAllowedAreas(Qt::RightDockWidgetArea|Qt::LeftDockWidgetArea);
+    colorDock->setMinimumWidth(290);colorDock->setMaximumWidth(380);
+    colorDock->setWidget(makeColorPanel());
+    addDockWidget(Qt::RightDockWidgetArea,colorDock);
+
+    auto*layersDock=new QDockWidget(QStringLiteral("Layers"),this);
+    layersDock->setObjectName(QStringLiteral("LayersDock"));
+    layersDock->setAllowedAreas(Qt::RightDockWidgetArea|Qt::LeftDockWidgetArea);
+    layersDock->setMinimumWidth(290);layersDock->setMaximumWidth(380);
+    layersDock->setWidget(makeLayersPanel());
+    addDockWidget(Qt::RightDockWidgetArea,layersDock);
+
+    auto*brushDock=new QDockWidget(QStringLiteral("Brush Presets"),this);
+    brushDock->setObjectName(QStringLiteral("BrushPresetsDock"));
+    brushDock->setAllowedAreas(Qt::RightDockWidgetArea|Qt::LeftDockWidgetArea);
+    brushDock->setMinimumWidth(290);brushDock->setMaximumWidth(380);
+    brushDock->setWidget(makeBrushPanel());
+    addDockWidget(Qt::RightDockWidgetArea,brushDock);
+
+    auto*optionsDock=new QDockWidget(QStringLiteral("Tool Options"),this);
+    optionsDock->setObjectName(QStringLiteral("ToolOptionsDock"));
+    optionsDock->setAllowedAreas(Qt::RightDockWidgetArea|Qt::LeftDockWidgetArea);
+    optionsDock->setMinimumWidth(290);optionsDock->setMaximumWidth(380);
+    optionsDock->setWidget(makeInspectorPanel());
+    addDockWidget(Qt::RightDockWidgetArea,optionsDock);
+
+    auto*timeline=new QDockWidget(QStringLiteral("Animation Timeline"),this);
+    timeline->setObjectName(QStringLiteral("TimelineDock"));
+    timeline->setMinimumHeight(220);timeline->setMaximumHeight(330);
+    timeline->setWidget(makeTimelinePanel());
+    addDockWidget(Qt::BottomDockWidgetArea,timeline);
+
+    m_production=new FluxProductionDock(m_document,m_canvas,this);
+    auto*productionDock=new QDockWidget(QStringLiteral("Production Center"),this);
+    productionDock->setObjectName(QStringLiteral("ProductionDock"));
+    productionDock->setMinimumHeight(220);productionDock->setMaximumHeight(360);
+    productionDock->setWidget(m_production);
+    addDockWidget(Qt::BottomDockWidgetArea,productionDock);
+    tabifyDockWidget(timeline,productionDock);
+    timeline->raise();
+
+    connect(m_production,&FluxProductionDock::requestNewProject,this,&FluxMainWindow::newProject);
+    connect(m_production,&FluxProductionDock::requestOpenProject,this,&FluxMainWindow::openProject);
+    connect(m_production,&FluxProductionDock::requestSaveProject,this,&FluxMainWindow::saveProject);
+
+    auto*advanced=new QDockWidget(QStringLiteral("Advanced Production Suite"),this);
+    advanced->setObjectName(QStringLiteral("AdvancedSuiteDock"));
+    advanced->setWidget(new FluxAdvancedSuite(m_document,m_canvas,advanced));
+    addDockWidget(Qt::LeftDockWidgetArea,advanced);
+    advanced->hide();
+
+    resizeDocks({colorDock,layersDock,brushDock,optionsDock},{220,360,250,220},Qt::Vertical);
+    resizeDocks({timeline},{250},Qt::Vertical);
 }
 
-QWidget*FluxMainWindow::makeColorPanel(){
+QWidget*FluxMainWindow::makeColorPanel()QWidget*FluxMainWindow::makeColorPanel(){
     auto*w=new QWidget;auto*l=new QVBoxLayout(w);l->setContentsMargins(12,12,12,12);l->setSpacing(10);l->addWidget(uiLabel("COLOR SELECTOR","panelTitle"));
     m_colorWheel=new FluxColorWheel(w);l->addWidget(m_colorWheel,0,Qt::AlignHCenter);auto*hex=new QLineEdit("#2A80FF",w);hex->setPlaceholderText("#RRGGBB");l->addWidget(hex);
     auto*apply=new QPushButton("Apply Color",w);l->addWidget(apply);

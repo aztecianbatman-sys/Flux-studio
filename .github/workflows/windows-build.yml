@@ -2,6 +2,9 @@ name: Flux Studio Windows Build
 
 on: [push, workflow_dispatch]
 
+permissions:
+  contents: write
+
 jobs:
   package-windows:
     name: Build Windows x64 installer
@@ -16,6 +19,26 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Normalize Windows/Qt compatibility
+        shell: pwsh
+        run: python tools/fix_windows_qt68.py
+
+      - name: Persist source compatibility fixes
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src
+          if (git diff --cached --quiet) {
+            Write-Host "No source compatibility changes were necessary."
+          } else {
+            git commit -m "Fix Windows Qt 6.8 MSVC compatibility"
+            git push origin HEAD:main
+          }
 
       - name: Install Qt
         shell: pwsh

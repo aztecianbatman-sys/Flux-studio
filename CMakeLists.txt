@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(FluxStudio VERSION 0.7.0 LANGUAGES CXX)
+project(FluxStudio VERSION 0.8.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -55,6 +55,10 @@ qt_add_executable(FluxStudio
     src/fluxperformance.h
     src/fluxworkflow.cpp
     src/fluxworkflow.h
+    src/fluxprojectpackage.cpp
+    src/fluxprojectpackage.h
+    src/fluxproductiondock.cpp
+    src/fluxproductiondock.h
 )
 
 target_link_libraries(FluxStudio PRIVATE Qt6::Widgets Qt6::OpenGLWidgets Qt6::Svg)

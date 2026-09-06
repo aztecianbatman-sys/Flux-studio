@@ -5,7 +5,6 @@ static QSettings settings(){ return QSettings(QStringLiteral("Flux"), QStringLit
 
 FluxPreferences FluxPreferencesStore::load(){
     QSettings s=settings(); FluxPreferences p;
-#define V(key, field) p.field=s.value(QStringLiteral(key),p.field).decltype(p.field)();
     p.theme=s.value("preferences/theme",p.theme).toString();
     p.density=s.value("preferences/density",p.density).toString();
     p.uiScale=s.value("preferences/uiScale",p.uiScale).toInt();
@@ -19,7 +18,6 @@ FluxPreferences FluxPreferencesStore::load(){
     p.backupCount=s.value("preferences/backupCount",p.backupCount).toInt();
     p.memoryLimitMiB=s.value("preferences/memoryLimitMiB",p.memoryLimitMiB).toInt();
     p.defaultColorSpace=s.value("preferences/defaultColorSpace",p.defaultColorSpace).toString();
-#undef V
     return p;
 }
 void FluxPreferencesStore::save(const FluxPreferences&p){

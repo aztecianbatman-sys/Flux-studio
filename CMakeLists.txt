@@ -71,8 +71,13 @@ qt_add_executable(FluxStudio
     src/fluxstudioutilities.h
     src/fluxadvancedsuite.cpp
     src/fluxadvancedsuite.h
+    src/fluxcolorwheel.cpp
+    src/fluxcolorwheel.h
     resources/flux.qrc
 )
+if(WIN32)
+    target_sources(FluxStudio PRIVATE packaging/windows/fluxstudio.rc assets/flux-logo.ico)
+endif()
 target_link_libraries(FluxStudio PRIVATE Qt6::Widgets Qt6::OpenGLWidgets Qt6::Svg)
 if(MSVC)
     target_compile_options(FluxStudio PRIVATE /W4 /permissive-)

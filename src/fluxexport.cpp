@@ -4,13 +4,51 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QPainter>
+#include <QRegularExpression>
+#include <QSaveFile>
 #include <QStandardPaths>
 #include <QStringConverter>
 #include <QTextStream>
 
-bool FluxExportEngine::exportImage(const QImage&image,const QString&path,const FluxRenderSettings&settings,QString*error){if(image.isNull()){if(error)*error="Empty render";return false;}QImage out=image;if(settings.width>0&&settings.height>0&&(out.width()!=settings.width||out.height()!=settings.height))out=out.scaled(settings.width,settings.height,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);if(!settings.transparent)out=out.convertToFormat(QImage::Format_RGB32);if(!out.save(path)){if(error)*error=QStringLiteral("Could not save %1").arg(path);return false;}return true;}
-bool FluxExportEngine::exportSvgRaster(const QImage&image,const QString&path,const FluxRenderSettings&settings,QString*error){if(image.isNull()){if(error)*error="Empty render";return false;}QImage out=image;if(settings.width>0&&settings.height>0)out=out.scaled(settings.width,settings.height,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);QByteArray png;QBuffer buffer(&png);buffer.open(QIODevice::WriteOnly);if(!out.save(&buffer,"PNG")){if(error)*error="Could not encode SVG image";return false;}QFile file(path);if(!file.open(QIODevice::WriteOnly|QIODevice::Truncate)){if(error)*error=file.errorString();return false;}QTextStream s(&file);s.setEncoding(QStringConverter::Utf8);s<<"<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\""<<out.width()<<"\" height=\""<<out.height()<<"\" viewBox=\"0 0 "<<out.width()<<' '<<out.height()<<"\"><image width=\"100%\" height=\"100%\" preserveAspectRatio=\"none\" href=\"data:image/png;base64,"<<png.toBase64()<<"\"/></svg>";file.close();return true;}
-bool FluxExportEngine::exportSequence(const std::function<QImage(int)>&renderer,const FluxRenderSettings&settings,const QString&directory,QString*error){if(!QDir().mkpath(directory)){if(error)*error="Could not create render directory";return false;}const int end=qMax(settings.startFrame,settings.endFrame);for(int f=settings.startFrame;f<=end;++f){const QString file=QDir(directory).filePath(QStringLiteral("frame_%1.png").arg(f,6,10,QChar('0')));if(!exportImage(renderer(f),file,settings,error))return false;}return true;}
-bool FluxExportEngine::exportSpriteSheet(const std::function<QImage(int)>&renderer,const FluxRenderSettings&settings,const QString&path,int columns,QString*error){columns=qMax(1,columns);const int count=qMax(1,settings.endFrame-settings.startFrame+1);QImage first=renderer(settings.startFrame);if(first.isNull()){if(error)*error="First sprite frame is empty";return false;}if(settings.width>0&&settings.height>0)first=first.scaled(settings.width,settings.height,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);const int rows=(count+columns-1)/columns;QImage sheet(first.width()*columns,first.height()*rows,settings.transparent?QImage::Format_ARGB32:QImage::Format_RGB32);sheet.fill(Qt::transparent);QPainter p(&sheet);for(int i=0;i<count;++i){QImage frame=renderer(settings.startFrame+i);if(frame.isNull()){if(error)*error=QStringLiteral("Frame %1 is empty").arg(i);return false;}if(frame.size()!=first.size())frame=frame.scaled(first.size(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);p.drawImage((i%columns)*first.width(),(i/columns)*first.height(),frame);}p.end();return sheet.save(path);}
+namespace {
+QString paddedFrameName(const QString&pattern,int frame){
+    QString out=pattern;
+    QRegularExpression rx(QStringLiteral("%([0-9]*)"));
+    auto m=rx.match(out);
+    if(m.hasMatch()){int width=m.captured(1).isEmpty()?1:m.captured(1).toInt();out.replace(m.capturedStart(),m.capturedLength(),QString::number(frame).rightJustified(width,QChar('0')));}else out=QStringLiteral("frame_%1.png").arg(frame,6,10,QChar('0'));
+    return out;
+}
+}
+
+bool FluxExportEngine::exportImage(const QImage&image,const QString&path,const FluxRenderSettings&settings,QString*error){
+    if(image.isNull()){if(error)*error="Empty render";return false;}
+    QImage out=image;if(settings.width>0&&settings.height>0&&(out.width()!=settings.width||out.height()!=settings.height))out=out.scaled(settings.width,settings.height,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+    if(!settings.transparent)out=out.convertToFormat(QImage::Format_RGB32);
+    const QFileInfo info(path);QDir().mkpath(info.absolutePath());
+    if(!out.save(path)){if(error)*error=QStringLiteral("Could not save %1").arg(path);return false;}return true;
+}
+
+bool FluxExportEngine::exportSvgRaster(const QImage&image,const QString&path,const FluxRenderSettings&settings,QString*error){
+    if(image.isNull()){if(error)*error="Empty render";return false;}QImage out=image;if(settings.width>0&&settings.height>0)out=out.scaled(settings.width,settings.height,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);QByteArray png;QBuffer buffer(&png);buffer.open(QIODevice::WriteOnly);if(!out.save(&buffer,"PNG")){if(error)*error="Could not encode SVG image";return false;}QFile file(path);if(!file.open(QIODevice::WriteOnly|QIODevice::Truncate)){if(error)*error=file.errorString();return false;}QTextStream s(&file);s.setEncoding(QStringConverter::Utf8);s<<"<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\""<<out.width()<<"\" height=\""<<out.height()<<"\" viewBox=\"0 0 "<<out.width()<<' '<<out.height()<<"\"><image width=\"100%\" height=\"100%\" preserveAspectRatio=\"none\" href=\"data:image/png;base64,"<<png.toBase64()<<"\"/></svg>";file.close();return true;
+}
+
+bool FluxExportEngine::exportSequence(const std::function<QImage(int)>&renderer,const FluxRenderSettings&settings,const QString&directory,QString*error){
+    if(!QDir().mkpath(directory)){if(error)*error="Could not create render directory";return false;}const int start=qMax(0,settings.startFrame),end=qMax(start,settings.endFrame),step=qMax(1,settings.step);for(int f=start;f<=end;f+=step){const QString file=QDir(directory).filePath(paddedFrameName(settings.filenamePattern,f));if(!exportImage(renderer(f),file,settings,error))return false;}return true;
+}
+
+bool FluxExportEngine::exportSpriteSheet(const std::function<QImage(int)>&renderer,const FluxRenderSettings&settings,const QString&path,int columns,QString*error){
+    columns=qMax(1,columns);const int count=qMax(1,(qMax(settings.startFrame,settings.endFrame)-settings.startFrame)/qMax(1,settings.step)+1);QImage first=renderer(settings.startFrame);if(first.isNull()){if(error)*error="First sprite frame is empty";return false;}if(settings.width>0&&settings.height>0)first=first.scaled(settings.width,settings.height,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);const int rows=(count+columns-1)/columns;QImage sheet(first.width()*columns,first.height()*rows,settings.transparent?QImage::Format_ARGB32:QImage::Format_RGB32);sheet.fill(Qt::transparent);QPainter p(&sheet);for(int i=0;i<count;++i){const int frame=settings.startFrame+i*qMax(1,settings.step);QImage current=renderer(frame);if(current.isNull()){if(error)*error=QStringLiteral("Frame %1 is empty").arg(frame);return false;}if(current.size()!=first.size())current=current.scaled(first.size(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);p.drawImage((i%columns)*first.width(),(i/columns)*first.height(),current);}p.end();if(!sheet.save(path)){if(error)*error=QStringLiteral("Could not save sprite sheet");return false;}return true;
+}
+
 bool FluxExportEngine::encodeWithFfmpeg(const QStringList&args,QString*error){QProcess p;p.start(QStringLiteral("ffmpeg"),args);if(!p.waitForStarted(3000)){if(error)*error="FFmpeg was not found. Install FFmpeg or add it to PATH.";return false;}p.waitForFinished(-1);if(p.exitStatus()!=QProcess::NormalExit||p.exitCode()!=0){if(error)*error=QString::fromLocal8Bit(p.readAllStandardError());if(error&&error->isEmpty())*error="FFmpeg encoding failed";return false;}return true;}
-bool FluxExportEngine::exportAnimated(const std::function<QImage(int)>&renderer,const FluxRenderJob&job,QString*error){const QString temp=QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation)).filePath(QStringLiteral("flux_render_%1").arg(QFileInfo(job.output).completeBaseName()));if(!exportSequence(renderer,job.settings,temp,error))return false;QStringList args={"-y","-framerate",QString::number(job.settings.fps),"-i",QDir(temp).filePath("frame_%06d.png")};const QString fmt=job.format.toLower();if(fmt=="gif")args<<"-f"<<"gif"<<job.output;else if(fmt=="webm")args<<"-c:v"<<(job.settings.codec.isEmpty()?"libvpx-vp9":job.settings.codec)<<"-b:v"<<QString::number(job.settings.bitrateKbps)+"k"<<"-pix_fmt"<<"yuva420p"<<job.output;else args<<"-c:v"<<(job.settings.codec.isEmpty()?"libx264":job.settings.codec)<<"-b:v"<<QString::number(job.settings.bitrateKbps)+"k"<<"-pix_fmt"<<(job.settings.transparent?"yuva420p":"yuv420p")<<job.output;return encodeWithFfmpeg(args,error);}
+
+bool FluxExportEngine::exportAnimated(const std::function<QImage(int)>&renderer,const FluxRenderJob&job,QString*error){
+    const QString temp=QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation)).filePath(QStringLiteral("flux_render_%1").arg(QFileInfo(job.output).completeBaseName()));QDir(temp).removeRecursively();
+    FluxRenderSettings settings=job.settings;settings.filenamePattern=QStringLiteral("frame_%1.png");if(!exportSequence(renderer,settings,temp,error))return false;
+    QStringList args={"-y","-framerate",QString::number(settings.fps),"-start_number",QString::number(settings.startFrame),"-i",QDir(temp).filePath("frame_%06d.png")};
+    if(!settings.audioPath.isEmpty()&&QFileInfo::exists(settings.audioPath))args<<"-i"<<settings.audioPath;
+    const QString fmt=job.format.toLower();
+    if(fmt=="gif")args<<"-f"<<"gif";
+    else {args<<"-c:v"<<(settings.codec.isEmpty()?(fmt=="webm"?"libvpx-vp9":"libx264"):settings.codec)<<"-b:v"<<QString::number(settings.bitrateKbps)+"k";if(!settings.profile.isEmpty())args<<"-profile:v"<<settings.profile;args<<"-pix_fmt"<<(settings.transparent?"yuva420p":"yuv420p");if(!settings.audioPath.isEmpty()&&QFileInfo::exists(settings.audioPath))args<<"-c:a"<<"aac"<<"-shortest";}
+    args<<job.output;const bool ok=encodeWithFfmpeg(args,error);QDir(temp).removeRecursively();return ok;
+}

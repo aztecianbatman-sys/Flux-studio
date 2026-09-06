@@ -5,7 +5,7 @@
 #include <QSpinBox>
 #include <QString>
 
-class QLabel; class QSlider; class QTreeWidget; class QTimer; class QComboBox; class QTreeWidgetItem; class QStackedWidget; class QWidget; class QAction; class QToolBar;
+class QLabel; class QSlider; class QTreeWidget; class QTimer; class QComboBox; class QTreeWidgetItem; class QStackedWidget; class QWidget; class QAction; class QToolBar; class FluxLayerTree;
 class FluxCanvas; class FluxDocument; class FluxWheel;
 
 class FluxMainWindow final : public QMainWindow {
@@ -28,6 +28,6 @@ private:
     void refreshLayers(); void addLayerTreeItem(QTreeWidgetItem* parent, int index); void refreshTimeline(); void restoreLastSession(); void markModified(); void polish();
     void loadProjectPath(const QString& path); void rememberRecent(const QString& path); void updateHomeRecent();
     FluxDocument* m_document{}; FluxCanvas* m_canvas{}; QWidget* m_home{}; QStackedWidget* m_stack{}; QLabel* m_statusLabel{}; QLabel* m_brushSizeLabel{}; QLabel* m_cursorLabel{}; QLabel* m_colorSwatch{}; QLabel* m_zoomLabel{};
-    QSlider* m_brushSlider{}; QTreeWidget* m_layers{}; QListWidget* m_frames{}; QSpinBox* m_fps{}; QTimer* m_playTimer{}; QComboBox* m_blendMode{}; FluxWheel* m_wheel{}; QToolBar* m_topBar{}; QToolBar* m_toolRail{};
+    QSlider* m_brushSlider{}; FluxLayerTree* m_layers{}; QListWidget* m_frames{}; QSpinBox* m_fps{}; QTimer* m_playTimer{}; QComboBox* m_blendMode{}; FluxWheel* m_wheel{}; QToolBar* m_topBar{}; QToolBar* m_toolRail{};
     bool m_playing=false; bool m_syncingLayers=false; bool m_mirrorH=false; bool m_mirrorV=false; qreal m_canvasRotation=0; QString m_filePath; QString m_autosavePath;
 };

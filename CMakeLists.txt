@@ -70,6 +70,7 @@ qt_add_executable(FluxStudio
     src/fluxcolormanagement.h
     src/fluxvector.cpp
     src/fluxvector.h
+    resources/flux.qrc
 )
 
 target_link_libraries(FluxStudio PRIVATE Qt6::Widgets Qt6::OpenGLWidgets Qt6::Svg)

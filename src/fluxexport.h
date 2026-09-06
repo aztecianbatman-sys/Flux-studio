@@ -12,7 +12,9 @@ struct FluxRenderJob { QString name; QString output; QString format; FluxRenderS
 class FluxExportEngine final {
 public:
     static bool exportImage(const QImage&image,const QString&path,const FluxRenderSettings&settings,QString*error=nullptr);
+    static bool exportSvgRaster(const QImage&image,const QString&path,const FluxRenderSettings&settings,QString*error=nullptr);
     static bool exportSequence(const std::function<QImage(int)>&renderer,const FluxRenderSettings&settings,const QString&directory,QString*error=nullptr);
+    static bool exportSpriteSheet(const std::function<QImage(int)>&renderer,const FluxRenderSettings&settings,const QString&path,int columns,QString*error=nullptr);
     static bool exportAnimated(const std::function<QImage(int)>&renderer,const FluxRenderJob&job,QString*error=nullptr);
     static bool encodeWithFfmpeg(const QStringList&args,QString*error=nullptr);
 };

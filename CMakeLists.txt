@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(FluxStudio VERSION 0.4.0 LANGUAGES CXX)
+project(FluxStudio VERSION 0.5.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,6 +31,16 @@ qt_add_executable(FluxStudio
     src/fluxlayertree.h
     src/fluxwheel.cpp
     src/fluxwheel.h
+    src/fluxanimation.cpp
+    src/fluxanimation.h
+    src/fluxtimelinewidget.cpp
+    src/fluxtimelinewidget.h
+    src/fluxcompositor.cpp
+    src/fluxcompositor.h
+    src/fluxmedia.cpp
+    src/fluxmedia.h
+    src/fluxexport.cpp
+    src/fluxexport.h
     resources.qrc
 )
 

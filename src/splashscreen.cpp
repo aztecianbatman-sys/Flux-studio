@@ -1,9 +1,9 @@
 #include "splashscreen.h"
 
 #include <QApplication>
-#include <QFontDatabase>
 #include <QLinearGradient>
 #include <QPainter>
+#include <QPainterPath>
 #include <QSvgRenderer>
 #include <QThread>
 
@@ -44,13 +44,11 @@ void FluxSplash::paintEvent(QPaintEvent*) {
 
     const QRectF bounds = rect();
 
-    // Base artwork: Zhe in a warm creative studio.
     p.fillRect(bounds, QColor("#11161d"));
     QSvgRenderer art(QStringLiteral(":/art/assets/zhe.svg"));
     art.render(&p, bounds);
 
-    // Rich editorial overlay keeps the artwork visible while providing a clean
-    // professional area for branding and startup status.
+    // Darken only the presentation side so the illustration remains the hero.
     QLinearGradient shade(560, 0, 1200, 0);
     shade.setColorAt(0.0, QColor(9, 12, 16, 20));
     shade.setColorAt(0.25, QColor(9, 12, 16, 82));
@@ -58,7 +56,6 @@ void FluxSplash::paintEvent(QPaintEvent*) {
     shade.setColorAt(1.0, QColor(8, 10, 14, 228));
     p.fillRect(bounds, shade);
 
-    // Soft vignette at the edges.
     QRadialGradient vignette(bounds.center(), 760);
     vignette.setColorAt(0.72, QColor(0, 0, 0, 0));
     vignette.setColorAt(1.0, QColor(0, 0, 0, 120));
@@ -89,7 +86,6 @@ void FluxSplash::paintEvent(QPaintEvent*) {
     p.drawText(QRectF(822, 177, 320, 22), Qt::AlignLeft | Qt::AlignVCenter,
                QStringLiteral("DRAW   →   ANIMATE   →   COMPOSE   →   EXPORT"));
 
-    // Character credit/badge.
     p.setBrush(QColor(255, 255, 255, 18));
     p.setPen(QColor(255, 255, 255, 38));
     p.drawRoundedRect(QRectF(820, 220, 146, 34), 17, 17);
@@ -101,7 +97,6 @@ void FluxSplash::paintEvent(QPaintEvent*) {
     p.setFont(QFont(QStringLiteral("Segoe UI"), 15, QFont::Medium));
     p.drawText(QRectF(820, 515, 320, 25), Qt::AlignLeft | Qt::AlignVCenter, m_status);
 
-    // Progress track.
     const QRectF track(820, 558, 310, 7);
     p.setPen(Qt::NoPen);
     p.setBrush(QColor(255, 255, 255, 38));
@@ -123,8 +118,7 @@ void FluxSplash::paintEvent(QPaintEvent*) {
     p.drawText(QRectF(820, 625, 310, 18), Qt::AlignLeft | Qt::AlignVCenter,
                QStringLiteral("Flux Studio 0.6  •  Local-first creative workstation"));
 
-    // Small signature on the artwork side, giving Zhe a deliberate identity.
     p.setPen(QColor(255, 255, 255, 185));
     p.setFont(QFont(QStringLiteral("Segoe UI"), 10, QFont::DemiBold));
-    p.drawText(QRectF(52, 628, 170, 18), Qt::AlignLeft | Qt::AlignVCenter, QStringLiteral("ZHE / DRAW WITH FLOW"));
+    p.drawText(QRectF(52, 628, 220, 18), Qt::AlignLeft | Qt::AlignVCenter, QStringLiteral("ZHE  /  DRAW WITH FLOW"));
 }

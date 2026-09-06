@@ -14,6 +14,7 @@
 #include "brusheditor.h"
 #include "fluxcolorwheel.h"
 #include "fluxadvancedsuite.h"
+#include "fluxadvancedsuite.h"
 
 #include <QAction>
 #include <QActionGroup>

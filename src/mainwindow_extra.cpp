@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "fluxproductiondock.h"
+#include <QFileInfo>
 #include <QLabel>
 #include <QStackedWidget>
 #include <QStatusBar>
@@ -15,4 +16,13 @@ void FluxMainWindow::showRecoveryBrowser(){
     if(!m_production)return;
     m_production->show();
     m_production->raise();
+}
+
+void FluxMainWindow::markModified(){
+    const QString name = m_filePath.isEmpty()
+        ? QStringLiteral("Untitled")
+        : QFileInfo(m_filePath).completeBaseName();
+    setWindowTitle(QStringLiteral("Flux Studio — %1 *").arg(name));
+    if(m_statusLabel)
+        m_statusLabel->setText(QStringLiteral("Modified • Unsaved changes"));
 }
